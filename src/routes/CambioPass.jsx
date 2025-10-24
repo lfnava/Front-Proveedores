@@ -75,7 +75,7 @@ function CambioPass() {
       
       // Navegar al Dashboard después de 2 segundos
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/dashboarda");
       }, 2000);
     }, 1500);
   };
