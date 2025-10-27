@@ -25,6 +25,12 @@ import {
   Info
 } from "lucide-react";
 
+// Importar tus componentes (ajusta las rutas según tu estructura)
+import ExpedientesDigitales from './ExpedientesDigitales';
+import GestionProveedores from './GestionProveedores';
+import Usuarios from './Usuarios';
+import VerificacionR from './VerificacionR';
+
 function DashboardAdmin() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState("inicio");
@@ -43,7 +49,7 @@ function DashboardAdmin() {
       rechazado: 23,
     },
     facturas: {
-      aprovadas: 89,
+      aprobadas: 89,
       rechazadas: 15,
       "pendientes por pagar": 32,
       pagadas: 156,
@@ -128,16 +134,23 @@ function DashboardAdmin() {
     },
   ];
 
-  // Mapeo de títulos para los modales
-  const modalTitles = {
-    "altas": "Gestión de Altas de Proveedores",
-    "bajas": "Gestión de Bajas de Proveedores", 
-    "modificaciones": "Modificación de Datos de Proveedores",
-    "ordenes-compra": "Órdenes de Compra",
-    "aprobaciones": "Aprobaciones Pendientes",
-    "facturas": "Gestión de Facturas",
-    "administracion": "Administración de Usuarios",
-    "verificacion-rapida": "Verificación Rápida",
+  // Mapeo de modales a componentes
+  const modalComponents = {
+    // Gestión de Proveedores
+    "altas": { component: GestionProveedores, title: "Altas de Proveedores", props: { mode: 'alta' } },
+    "bajas": { component: GestionProveedores, title: "Bajas de Proveedores", props: { mode: 'baja' } },
+    "modificaciones": { component: GestionProveedores, title: "Modificación de Proveedores", props: { mode: 'modificacion' } },
+    
+    // Expedientes Digitales
+    "ordenes-compra": { component: ExpedientesDigitales, title: "Órdenes de Compra", props: { section: 'ordenes-compra' } },
+    "aprobaciones": { component: ExpedientesDigitales, title: "Aprobaciones", props: { section: 'aprobaciones' } },
+    "facturas": { component: ExpedientesDigitales, title: "Facturas", props: { section: 'facturas' } },
+    
+    // Usuarios
+    "administracion": { component: Usuarios, title: "Administración de Usuarios", props: {} },
+    
+    // Verificación Rápida
+    "verificacion-rapida": { component: VerificacionR, title: "Verificación Rápida", props: {} }
   };
 
   // Función para mostrar alertas centradas
@@ -145,7 +158,6 @@ function DashboardAdmin() {
     setAlertConfig({ type, title, message, showConfirm, onConfirm });
     setAlertOpen(true);
     
-    // Auto-cerrar después de 4 segundos para success e info
     if ((type === 'success' || type === 'info') && !showConfirm) {
       setTimeout(() => {
         setAlertOpen(false);
@@ -188,23 +200,18 @@ function DashboardAdmin() {
   // Función CORREGIDA para descargar documentos
   const handleDownload = (documento, tipo) => {
     try {
-      // Crear contenido simulado para el documento
       const contenido = `Documento: ${documento.nombre}\nTipo: ${tipo}\nTamaño: ${documento.tamaño}\nFecha: ${new Date().toLocaleDateString()}\n\nEste es un documento de ejemplo.`;
       
-      // Crear blob con el contenido
       const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
       const url = window.URL.createObjectURL(blob);
       
-      // Crear enlace de descarga
       const link = document.createElement('a');
       link.href = url;
       link.download = documento.nombre;
       
-      // Simular clic en el enlace
       document.body.appendChild(link);
       link.click();
       
-      // Limpiar
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
@@ -368,10 +375,11 @@ function DashboardAdmin() {
   // Función para obtener colores según la categoría y estado
   const getChartColors = (chartType, labels) => {
     const colorMap = {
-      verde: '#10b981', // Verde para aprobado, pagadas
-      rojo: '#ef4444',  // Rojo para rechazado, vencidos
-      amarillo: '#f59e0b', // Amarillo para pendientes, en aviso, retrasadas
-      azul: '#3b82f6'   // Azul para nuevos
+      verde: '#10b981',
+      rojo: '#ef4444',
+      amarillo: '#f59e0b',
+      azul: '#3b82f6', 
+      verdeo: '#045338ff'
     };
 
     const colorRules = {
@@ -380,10 +388,10 @@ function DashboardAdmin() {
         'rechazado': colorMap.rojo
       },
       facturas: {
-        'aprovadas': colorMap.verde,
+        'aprobadas': colorMap.verde,
         'rechazadas': colorMap.rojo,
         'pendientes por pagar': colorMap.amarillo,
-        'pagadas': colorMap.verde
+        'pagadas': colorMap.verdeo
       },
       contratos: {
         'nuevos': colorMap.azul,
@@ -475,9 +483,33 @@ function DashboardAdmin() {
     );
   };
 
-  // Componente del Modal SIMPLIFICADO
-  const Modal = ({ isOpen, onClose, title }) => {
+  // Componente del Modal MEJORADO que carga tus componentes
+  const Modal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
+
+    const modalConfig = modalComponents[currentModal];
+    
+    const renderModalContent = () => {
+      if (modalConfig) {
+        const ModalComponent = modalConfig.component;
+        return <ModalComponent {...modalConfig.props} onClose={onClose} />;
+      }
+      
+      // Fallback para modales no configurados
+      return (
+        <div className="text-center py-8">
+          <div className="w-16 h-16 bg-lightBlue rounded-full flex items-center justify-center mx-auto mb-4">
+            <FileText className="w-8 h-8 text-midBlue" />
+          </div>
+          <p className="text-midBlue text-lg">
+            Contenido de {currentModal}
+          </p>
+          <p className="text-darkBlue mt-2">
+            Esta sección se cargará desde un archivo separado
+          </p>
+        </div>
+      );
+    };
 
     return (
       <>
@@ -488,12 +520,12 @@ function DashboardAdmin() {
         
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div 
-            className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 hover:scale-100"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 hover:scale-100"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-gradient-to-r from-midBlue to-darkBlue px-6 py-4 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-white">
-                {title}
+                {modalConfig?.title || currentModal}
               </h2>
               <button
                 onClick={onClose}
@@ -503,29 +535,8 @@ function DashboardAdmin() {
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto max-h-[70vh]">
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-lightBlue rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FileText className="w-8 h-8 text-midBlue" />
-                </div>
-                <p className="text-midBlue text-lg">
-                  Contenido de {title}
-                </p>
-                <p className="text-darkBlue mt-2">
-                  Esta sección se cargará desde un archivo separado
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 px-6 py-4 border-t border-lightBlue">
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={onClose}
-                  className="px-6 py-2 text-darkBlue border border-lightBlue rounded-lg hover:bg-lightBlue transition font-medium"
-                >
-                  Cerrar
-                </button>
-              </div>
+            <div className="p-0 overflow-y-auto max-h-[80vh]">
+              {renderModalContent()}
             </div>
           </div>
         </div>
@@ -927,11 +938,10 @@ function DashboardAdmin() {
         </section>
       </main>
 
-      {/* MODAL SIMPLIFICADO */}
+      {/* MODAL MEJORADO que carga tus componentes */}
       <Modal
         isOpen={modalOpen}
         onClose={closeModal}
-        title={modalTitles[currentModal] || "Sección"}
       />
 
       {/* ALERTAS CENTRADAS */}
