@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CheckCircle, AlertCircle, Info, X, AlertTriangle, Eye, EyeOff, Clock, User } from "lucide-react";
 
 function GestionProveedores({ mode, onClose }) {
@@ -12,9 +12,8 @@ function GestionProveedores({ mode, onClose }) {
     cuentaClabe: "",
     banco: "",
     observaciones: "",
-    tipoUsuario: "proveedor",
-    area: "",
-    password: ""
+    password: "",
+    tipoProveedor: "fisica" // Nueva opción: "fisica" o "moral"
   });
 
   const [formModificacion, setFormModificacion] = useState({
@@ -28,8 +27,7 @@ function GestionProveedores({ mode, onClose }) {
     cuentaClabe: "",
     banco: "",
     observaciones: "",
-    tipoUsuario: "proveedor",
-    area: "",
+    tipoProveedor: "fisica",
     password: "",
     // Campos para el historial de cambios
     cambiosRealizados: [],
@@ -57,6 +55,25 @@ function GestionProveedores({ mode, onClose }) {
   const [showPassword, setShowPassword] = useState(false);
   const [proveedorEncontrado, setProveedorEncontrado] = useState(false);
 
+  // Función para obtener la fecha actual en formato YYYY-MM-DD
+  const getFechaActual = () => {
+    const hoy = new Date();
+    const año = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    return `${año}-${mes}-${dia}`;
+  };
+
+  // Efecto para establecer la fecha actual por defecto en el formulario de baja
+  useEffect(() => {
+    if (mode === "baja") {
+      setFormBaja(prev => ({
+        ...prev,
+        fechaBaja: getFechaActual()
+      }));
+    }
+  }, [mode]);
+
   // Datos de ejemplo para proveedores (simulando base de datos)
   const [proveedores, setProveedores] = useState([
     {
@@ -69,8 +86,7 @@ function GestionProveedores({ mode, onClose }) {
       cuentaClabe: "012180001234567890",
       banco: "Banco Nacional",
       observaciones: "Excelente servicio, entrega puntual",
-      tipoUsuario: "proveedor",
-      area: "",
+      tipoProveedor: "moral",
       password: "password123",
       versiones: [
         {
@@ -83,16 +99,15 @@ function GestionProveedores({ mode, onClose }) {
     },
     {
       id: 2,
-      nombre: "Suministros Industriales MX",
-      correo: "ventas@suministros-industrial.com",
+      nombre: "Juan Pérez García",
+      correo: "juan.perez@ejemplo.com",
       telefono: "+52 81 2345 6789",
-      direccionFiscal: "Blvd. Constitución 456, Monterrey",
-      rfc: "SIMX987654321",
+      direccionFiscal: "Calle Principal 456, Monterrey",
+      rfc: "PEGJ800101ABC",
       cuentaClabe: "012180009876543210",
       banco: "Banco Comercial",
-      observaciones: "Buen precio, atención rápida",
-      tipoUsuario: "proveedor",
-      area: "",
+      observaciones: "Servicios profesionales",
+      tipoProveedor: "fisica",
       password: "password456",
       versiones: [
         {
@@ -235,8 +250,7 @@ function GestionProveedores({ mode, onClose }) {
         cuentaClabe: proveedor.cuentaClabe,
         banco: proveedor.banco,
         observaciones: proveedor.observaciones,
-        tipoUsuario: proveedor.tipoUsuario,
-        area: proveedor.area,
+        tipoProveedor: proveedor.tipoProveedor || "fisica",
         password: proveedor.password,
         ultimaModificacion: proveedor.versiones[proveedor.versiones.length - 1]
       }));
@@ -258,13 +272,9 @@ function GestionProveedores({ mode, onClose }) {
     e.preventDefault();
     
     // Validaciones básicas
-    if (!formAlta.nombre || !formAlta.correo || !formAlta.telefono || !formAlta.password) {
+    if (!formAlta.nombre || !formAlta.correo || !formAlta.telefono || !formAlta.password || 
+        !formAlta.direccionFiscal || !formAlta.rfc || !formAlta.cuentaClabe || !formAlta.banco) {
       showAlert('error', 'Campos Requeridos', 'Por favor complete todos los campos obligatorios marcados con *');
-      return;
-    }
-
-    if (formAlta.tipoUsuario === 'interno' && !formAlta.area) {
-      showAlert('error', 'Campo Requerido', 'El campo Área es obligatorio para usuarios internos');
       return;
     }
 
@@ -282,9 +292,8 @@ function GestionProveedores({ mode, onClose }) {
       cuentaClabe: "",
       banco: "",
       observaciones: "",
-      tipoUsuario: "proveedor",
-      area: "",
-      password: ""
+      password: "",
+      tipoProveedor: "fisica"
     });
   };
 
@@ -340,8 +349,7 @@ function GestionProveedores({ mode, onClose }) {
       cuentaClabe: "",
       banco: "",
       observaciones: "",
-      tipoUsuario: "proveedor",
-      area: "",
+      tipoProveedor: "fisica",
       password: "",
       cambiosRealizados: [],
       ultimaModificacion: null
@@ -363,7 +371,7 @@ function GestionProveedores({ mode, onClose }) {
   const handleBajaSubmit = (e) => {
     e.preventDefault();
     
-    if (!formBaja.busqueda || !formBaja.fechaBaja || !formBaja.motivoBaja) {
+    if (!formBaja.busqueda || !formBaja.motivoBaja) {
       showAlert('error', 'Campos Incompletos', 'Por favor complete todos los campos obligatorios');
       return;
     }
@@ -388,7 +396,7 @@ function GestionProveedores({ mode, onClose }) {
         showAlert('success', 'Proveedor Dado de Baja', 'El proveedor ha sido dado de baja exitosamente del sistema.');
         setFormBaja({
           busqueda: "",
-          fechaBaja: "",
+          fechaBaja: getFechaActual(), // Mantener la fecha actual al limpiar
           motivoBaja: "",
           motivoOtros: ""
         });
@@ -440,7 +448,22 @@ function GestionProveedores({ mode, onClose }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre o Razón Social *
+                  Tipo de Proveedor *
+                </label>
+                <select
+                  name="tipoProveedor"
+                  value={formAlta.tipoProveedor}
+                  onChange={handleAltaChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="fisica">Persona Física</option>
+                  <option value="moral">Persona Moral</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {formAlta.tipoProveedor === 'fisica' ? 'Nombre Completo *' : 'Nombre de la Empresa *'}
                 </label>
                 <input
                   type="text"
@@ -448,7 +471,7 @@ function GestionProveedores({ mode, onClose }) {
                   value={formAlta.nombre}
                   onChange={handleAltaChange}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Ingrese nombre o razón social"
+                  placeholder={formAlta.tipoProveedor === 'fisica' ? 'Nombre completo del proveedor' : 'Nombre de la empresa'}
                   required
                 />
               </div>
@@ -485,95 +508,63 @@ function GestionProveedores({ mode, onClose }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de Usuario *
+                  Dirección Fiscal *
                 </label>
-                <select
-                  name="tipoUsuario"
-                  value={formAlta.tipoUsuario}
+                <input
+                  type="text"
+                  name="direccionFiscal"
+                  value={formAlta.direccionFiscal}
                   onChange={handleAltaChange}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="proveedor">Proveedor Externo</option>
-                  <option value="interno">Usuario Interno</option>
-                </select>
+                  placeholder="Dirección completa"
+                  required
+                />
               </div>
 
-              {formAlta.tipoUsuario === "proveedor" && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dirección Fiscal
-                    </label>
-                    <input
-                      type="text"
-                      name="direccionFiscal"
-                      value={formAlta.direccionFiscal}
-                      onChange={handleAltaChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Dirección completa"
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  RFC *
+                </label>
+                <input
+                  type="text"
+                  name="rfc"
+                  value={formAlta.rfc}
+                  onChange={handleAltaChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={formAlta.tipoProveedor === 'fisica' ? 'ABCD123456789' : 'ABCD123456ABC'}
+                  required
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      RFC
-                    </label>
-                    <input
-                      type="text"
-                      name="rfc"
-                      value={formAlta.rfc}
-                      onChange={handleAltaChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="ABCD123456789"
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cuenta CLABE *
+                </label>
+                <input
+                  type="text"
+                  name="cuentaClabe"
+                  value={formAlta.cuentaClabe}
+                  onChange={handleAltaChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="18 dígitos"
+                  required
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cuenta CLABE
-                    </label>
-                    <input
-                      type="text"
-                      name="cuentaClabe"
-                      value={formAlta.cuentaClabe}
-                      onChange={handleAltaChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="18 dígitos"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Banco
-                    </label>
-                    <input
-                      type="text"
-                      name="banco"
-                      value={formAlta.banco}
-                      onChange={handleAltaChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Nombre del banco"
-                    />
-                  </div>
-                </>
-              )}
-
-              {formAlta.tipoUsuario === "interno" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Área o Departamento *
-                  </label>
-                  <input
-                    type="text"
-                    name="area"
-                    value={formAlta.area}
-                    onChange={handleAltaChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ej: Recursos Humanos, TI, etc."
-                    required
-                  />
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Banco *
+                </label>
+                <input
+                  type="text"
+                  name="banco"
+                  value={formAlta.banco}
+                  onChange={handleAltaChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Nombre del banco"
+                  required
+                />
+              </div>
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -666,7 +657,22 @@ function GestionProveedores({ mode, onClose }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nombre o Razón Social *
+                      Tipo de Proveedor *
+                    </label>
+                    <select
+                      name="tipoProveedor"
+                      value={formModificacion.tipoProveedor}
+                      onChange={handleModificacionChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="fisica">Persona Física</option>
+                      <option value="moral">Persona Moral</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nombre o Nombre de la Empresa *
                     </label>
                     <input
                       type="text"
@@ -706,22 +712,7 @@ function GestionProveedores({ mode, onClose }) {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tipo de Usuario *
-                    </label>
-                    <select
-                      name="tipoUsuario"
-                      value={formModificacion.tipoUsuario}
-                      onChange={handleModificacionChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="proveedor">Proveedor Externo</option>
-                      <option value="interno">Usuario Interno</option>
-                    </select>
-                  </div>
-
-                  {formModificacion.tipoUsuario === "proveedor" && (
+                  {formModificacion.tipoProveedor === "moral" && (
                     <>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -775,22 +766,6 @@ function GestionProveedores({ mode, onClose }) {
                         />
                       </div>
                     </>
-                  )}
-
-                  {formModificacion.tipoUsuario === "interno" && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Área o Departamento *
-                      </label>
-                      <input
-                        type="text"
-                        name="area"
-                        value={formModificacion.area}
-                        onChange={handleModificacionChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
                   )}
 
                   <div className="md:col-span-2">
@@ -874,16 +849,14 @@ function GestionProveedores({ mode, onClose }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha de Baja *
+                  Fecha de Baja
                 </label>
-                <input
-                  type="date"
-                  name="fechaBaja"
-                  value={formBaja.fechaBaja}
-                  onChange={handleBajaChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
+                <div className="p-3 border border-gray-300 rounded-lg bg-gray-50">
+                  <p className="text-gray-700 font-medium">{formBaja.fechaBaja}</p>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  La fecha se establece automáticamente a hoy
+                </p>
               </div>
 
               <div>
@@ -968,7 +941,7 @@ function GestionProveedores({ mode, onClose }) {
 
   const getDescription = () => {
     switch (mode) {
-      case "alta": return "Complete el formulario para registrar un nuevo proveedor o usuario interno en el sistema.";
+      case "alta": return "Complete el formulario para registrar un nuevo proveedor (Persona Física o Moral) en el sistema.";
       case "modificacion": return "Busque un proveedor existente y modifique sus datos. Se registrará un historial de cambios.";
       case "baja": return "Busque un proveedor y complete la información requerida para darle de baja del sistema.";
       default: return "Seleccione una operación para gestionar proveedores.";

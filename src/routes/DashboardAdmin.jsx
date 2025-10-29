@@ -100,6 +100,7 @@ function DashboardAdmin() {
     }
   ]);
 
+  // MENÚ ACTUALIZADO - Eliminadas las opciones de Órdenes de Compra, Aprobaciones y Facturas
   const menuItems = [
     {
       id: "gestion-proveedores",
@@ -115,11 +116,7 @@ function DashboardAdmin() {
       id: "expedientes-digitales",
       title: "Expedientes Digitales",
       icon: <ClipboardList className="w-5 h-5" />,
-      submenu: [
-        { id: "ordenes-compra", title: "Órdenes de Compra", icon: <FileText className="w-4 h-4" /> },
-        { id: "aprobaciones", title: "Aprobaciones", icon: <CheckCircle className="w-4 h-4" /> },
-        { id: "facturas", title: "Facturas", icon: <FileText className="w-4 h-4" /> },
-      ],
+      // SUBMENÚ ELIMINADO - Ahora es un solo elemento
     },
     {
       id: "usuarios",
@@ -134,17 +131,15 @@ function DashboardAdmin() {
     },
   ];
 
-  // Mapeo de modales a componentes
+  // Mapeo de modales a componentes ACTUALIZADO
   const modalComponents = {
     // Gestión de Proveedores
     "altas": { component: GestionProveedores, title: "Altas de Proveedores", props: { mode: 'alta' } },
     "bajas": { component: GestionProveedores, title: "Bajas de Proveedores", props: { mode: 'baja' } },
     "modificaciones": { component: GestionProveedores, title: "Modificación de Proveedores", props: { mode: 'modificacion' } },
     
-    // Expedientes Digitales
-    "ordenes-compra": { component: ExpedientesDigitales, title: "Órdenes de Compra", props: { section: 'ordenes-compra' } },
-    "aprobaciones": { component: ExpedientesDigitales, title: "Aprobaciones", props: { section: 'aprobaciones' } },
-    "facturas": { component: ExpedientesDigitales, title: "Facturas", props: { section: 'facturas' } },
+    // Expedientes Digitales - Ahora es un solo modal
+    "expedientes-digitales": { component: ExpedientesDigitales, title: "Expedientes Digitales", props: {} },
     
     // Usuarios
     "administracion": { component: Usuarios, title: "Administración de Usuarios", props: {} },
@@ -870,6 +865,7 @@ function DashboardAdmin() {
                 {sidebarOpen && <span className="text-sm font-medium">{item.title}</span>}
               </button>
 
+              {/* SUBMENÚ SOLO PARA ITEMS QUE LO TIENEN */}
               {sidebarOpen && item.submenu && (
                 <div className="ml-4 mt-2 space-y-1 border-l border-lightBlue pl-4">
                   {item.submenu.map((sub) => (
