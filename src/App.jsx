@@ -7,6 +7,10 @@ import ExpedientesDigitales from "./routes/ExpedientesDigitales.jsx";
 import GestionProveedores from "./routes/GestionProveedores.jsx";
 import Usuarios from "./routes/Usuarios.jsx";
 import VerificacionR from "./routes/VerificacionR.jsx";
+import Aprobacion from "./routes/Aprobacion.jsx";
+import DashboardApro from "./routes/DashboardApro.jsx";
+import Graficas from "./routes/Graficas.jsx";
+
 
 function App() {
   return (
@@ -19,6 +23,10 @@ function App() {
         <Route path="/gestionpro" element={<GestionProveedores />} />
         <Route path="/usarios" element={<Usuarios />} />
         <Route path="/verificacior" element={<VerificacionR />} />
+        <Route path="/aprobacion" element={<Aprobacion />} />
+        <Route path="/dashboardapro" element={<DashboardApro />} />
+        <Route path="/graficas" element={<Graficas />} />
+
     </Routes>
   );
 }

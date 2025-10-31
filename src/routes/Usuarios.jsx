@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Search, Edit, Trash2, Eye, UserPlus, CheckCircle, AlertCircle, Info, X, AlertTriangle, User } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Eye, UserPlus, CheckCircle, AlertCircle, Info, X, AlertTriangle, User, Bell } from "lucide-react";
 
 function Usuarios() {
   // Lista de áreas/departamentos disponibles
@@ -99,6 +99,24 @@ function Usuarios() {
   // Estado para mensajes de error
   const [errorEmail, setErrorEmail] = useState("");
 
+  // Estado para notificaciones (SOLO para solicitudes de alta)
+  const [notifications, setNotifications] = useState([
+    // Ejemplo de notificación de solicitud de alta
+    {
+      id: 1,
+      tipo: "solicitud",
+      mensaje: "Nueva solicitud de usuario",
+      datos: {
+        email: "nuevo.usuario@mbqinc.com",
+        nombre: "Nuevo Usuario Ejemplo",
+        area: "Recursos Humanos",
+        fecha: "2024-01-19 10:15:30"
+      },
+      leida: true
+    }
+  ]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
   // Función para mostrar alertas
   const showAlert = (type, title, message, showConfirm = false, onConfirm = null) => {
     setAlertConfig({ type, title, message, showConfirm, onConfirm });
@@ -109,6 +127,146 @@ function Usuarios() {
         setAlertOpen(false);
       }, 4000);
     }
+  };
+
+  // Función para agregar notificación de solicitud (SOLO para altas)
+  const agregarNotificacionSolicitud = (email, nombre, area) => {
+    const nuevaNotificacion = {
+      id: Date.now(),
+      tipo: "solicitud",
+      mensaje: `Nueva solicitud de usuario`,
+      datos: {
+        email,
+        nombre,
+        area,
+        fecha: new Date().toLocaleString()
+      },
+      leida: false
+    };
+    
+    setNotifications(prev => [nuevaNotificacion, ...prev]);
+  };
+
+  // Función para marcar notificación como leída
+  const marcarComoLeida = (id) => {
+    setNotifications(prev => 
+      prev.map(notif => 
+        notif.id === id ? { ...notif, leida: true } : notif
+      )
+    );
+  };
+
+  // Componente de Campana de Notificaciones (SOLO para solicitudes)
+  const CampanaNotificaciones = () => {
+    const notificacionesNoLeidas = notifications.filter(n => !n.leida).length;
+
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setShowNotifications(!showNotifications)}
+          className={`relative p-2 transition-all duration-300 ${
+            notificacionesNoLeidas > 0 
+              ? 'text-red-500 hover:text-red-600 transform hover:scale-110' 
+              : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          {/* Campana con diseño especial cuando hay notificaciones */}
+          <div className="relative">
+            <Bell className={`w-7 h-7 transition-all duration-300 ${
+              notificacionesNoLeidas > 0 ? 'animate-bounce' : ''
+            }`} />
+            
+            {/* Efecto de brillo cuando hay notificaciones */}
+            {notificacionesNoLeidas > 0 && (
+              <div className="absolute inset-0 bg-red-400 rounded-full opacity-20 animate-ping"></div>
+            )}
+          </div>
+          
+          {/* Contador de notificaciones */}
+          {notificacionesNoLeidas > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center border-2 border-white shadow-lg animate-pulse">
+              {notificacionesNoLeidas}
+            </span>
+          )}
+        </button>
+
+        {showNotifications && (
+          <>
+            <div 
+              className="fixed inset-0 z-40"
+              onClick={() => setShowNotifications(false)}
+            />
+            <div className="absolute right-0 top-12 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 className="font-semibold text-gray-800">Solicitudes de Usuarios</h3>
+                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">
+                  {notificacionesNoLeidas} nuevas
+                </span>
+              </div>
+              
+              <div className="max-h-96 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    No hay solicitudes pendientes
+                  </div>
+                ) : (
+                  notifications.map(notif => (
+                    <div
+                      key={notif.id}
+                      className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
+                        !notif.leida ? 'bg-red-50 border-l-4 border-l-red-500' : ''
+                      }`}
+                      onClick={() => marcarComoLeida(notif.id)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-3 h-3 rounded-full mt-1 flex-shrink-0 ${
+                          !notif.leida ? 'bg-red-500 animate-pulse' : 'bg-gray-300'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={`text-xs font-medium px-2 py-1 rounded ${
+                              !notif.leida 
+                                ? 'bg-red-100 text-red-800 border border-red-200' 
+                                : 'bg-green-100 text-green-800'
+                            }`}>
+                              {!notif.leida ? 'Nueva Solicitud' : 'Solicitud'}
+                            </span>
+                            <span className="text-xs text-gray-500">{notif.datos.fecha}</span>
+                          </div>
+                          
+                          <p className={`font-medium text-sm mb-2 ${
+                            !notif.leida ? 'text-red-700' : 'text-gray-800'
+                          }`}>
+                            {notif.datos.nombre}
+                          </p>
+                          
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <div><strong className="text-gray-700">Email:</strong> {notif.datos.email}</div>
+                            <div><strong className="text-gray-700">Nombre:</strong> {notif.datos.nombre}</div>
+                            <div><strong className="text-gray-700">Área:</strong> {notif.datos.area}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              
+              {notifications.length > 0 && (
+                <div className="p-3 border-t border-gray-200 bg-gray-50">
+                  <button
+                    onClick={() => setNotifications(prev => prev.map(n => ({ ...n, leida: true })))}
+                    className="w-full text-center text-xs text-red-600 hover:text-red-800 font-medium py-2 hover:bg-red-50 rounded transition-colors"
+                  >
+                    Marcar todas como leídas
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    );
   };
 
   // Componente de Alertas
@@ -297,6 +455,14 @@ function Usuarios() {
       id: Math.max(...usuarios.map(u => u.id)) + 1
     };
     setUsuarios([...usuarios, usuario]);
+    
+    // Agregar notificación de solicitud (SOLO para altas)
+    agregarNotificacionSolicitud(
+      nuevoUsuario.email,
+      nuevoUsuario.nombre,
+      nuevoUsuario.departamento
+    );
+    
     setModalAbierto(false);
     setNuevoUsuario({
       nombre: "",
@@ -307,7 +473,7 @@ function Usuarios() {
       tipo: "usuario"
     });
     setErrorEmail("");
-    showAlert('success', 'Usuario Agregado', 'El usuario ha sido agregado exitosamente.');
+    showAlert('success', 'Solicitud Enviada', 'La solicitud de alta de usuario ha sido enviada. Se notificará al administrador.');
   };
 
   const handleActualizarUsuario = (e) => {
@@ -345,11 +511,16 @@ function Usuarios() {
   return (
     <div className="p-6 bg-beige min-h-screen">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-darkBlue mb-2">Gestión de Usuarios</h1>
-        <p className="text-midBlue">
-          Administra los usuarios del sistema
-        </p>
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-darkBlue mb-2">Gestión de Usuarios</h1>
+          <p className="text-midBlue">
+            Administra los usuarios del sistema
+          </p>
+        </div>
+        
+        {/* Campana de notificaciones */}
+        <CampanaNotificaciones />
       </div>
 
       {/* Barra de herramientas */}
@@ -608,7 +779,7 @@ function Usuarios() {
                     type="submit"
                     className="bg-midBlue text-white px-6 py-3 rounded-lg hover:bg-darkBlue transition duration-200 font-medium flex-1"
                   >
-                    Agregar Usuario
+                    Enviar Solicitud
                   </button>
                   <button
                     type="button"

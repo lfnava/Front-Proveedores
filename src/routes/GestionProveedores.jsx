@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle, AlertCircle, Info, X, AlertTriangle, Eye, EyeOff, Clock, User } from "lucide-react";
+import { CheckCircle, AlertCircle, Info, X, AlertTriangle, Eye, EyeOff, Clock, User, Bell } from "lucide-react";
 
 function GestionProveedores({ mode, onClose }) {
   // Estados para los formularios
@@ -13,12 +13,11 @@ function GestionProveedores({ mode, onClose }) {
     banco: "",
     observaciones: "",
     password: "",
-    tipoProveedor: "fisica" // Nueva opción: "fisica" o "moral"
+    tipoProveedor: "fisica"
   });
 
   const [formModificacion, setFormModificacion] = useState({
     busqueda: "",
-    // Todos los campos del alta
     nombre: "",
     correo: "",
     telefono: "",
@@ -29,7 +28,6 @@ function GestionProveedores({ mode, onClose }) {
     observaciones: "",
     tipoProveedor: "fisica",
     password: "",
-    // Campos para el historial de cambios
     cambiosRealizados: [],
     ultimaModificacion: null
   });
@@ -38,7 +36,7 @@ function GestionProveedores({ mode, onClose }) {
     busqueda: "",
     fechaBaja: "",
     motivoBaja: "",
-    motivoOtros: "" // Nuevo campo para "otros" motivos
+    motivoOtros: ""
   });
 
   // Estado para alertas internas
@@ -54,6 +52,25 @@ function GestionProveedores({ mode, onClose }) {
   // Estado para mostrar/ocultar contraseña
   const [showPassword, setShowPassword] = useState(false);
   const [proveedorEncontrado, setProveedorEncontrado] = useState(false);
+
+  // Estado para notificaciones (SOLO para solicitudes de alta)
+  const [notifications, setNotifications] = useState([
+    // Ejemplo de notificación de solicitud de alta
+    {
+      id: 1,
+      tipo: "solicitud",
+      mensaje: "Nueva solicitud de proveedor",
+      datos: {
+        rfc: "TASA123456789",
+        correo: "contacto@tecnologia-avanzada.com",
+        nombre: "Tecnología Avanzada SA",
+        tipoProveedor: "moral",
+        fecha: "2024-01-19 10:15:30"
+      },
+      leida: true
+    }
+  ]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Función para obtener la fecha actual en formato YYYY-MM-DD
   const getFechaActual = () => {
@@ -94,6 +111,12 @@ function GestionProveedores({ mode, onClose }) {
           fecha: "2024-01-15",
           usuario: "admin",
           cambios: "Registro inicial"
+        },
+        {
+          version: 2,
+          fecha: "2024-01-18",
+          usuario: "admin",
+          cambios: "Teléfono actualizado, Observaciones actualizadas"
         }
       ]
     },
@@ -106,13 +129,40 @@ function GestionProveedores({ mode, onClose }) {
       rfc: "PEGJ800101ABC",
       cuentaClabe: "012180009876543210",
       banco: "Banco Comercial",
-      observaciones: "Servicios profesionales",
+      observaciones: "Servicios profesionales - contacto preferente por email",
       tipoProveedor: "fisica",
       password: "password456",
       versiones: [
         {
           version: 1,
           fecha: "2024-01-10",
+          usuario: "admin",
+          cambios: "Registro inicial"
+        },
+        {
+          version: 2,
+          fecha: "2024-01-20",
+          usuario: "admin",
+          cambios: "Correo actualizado, Observaciones actualizadas"
+        }
+      ]
+    },
+    {
+      id: 3,
+      nombre: "Suministros Industriales MX",
+      correo: "ventas@suministrosindustriales.com",
+      telefono: "+52 33 5678 9012",
+      direccionFiscal: "Av. Industrial 789, Guadalajara",
+      rfc: "SIMX850305XYZ",
+      cuentaClabe: "012180003456789012",
+      banco: "Banco Mercantil",
+      observaciones: "Proveedor de materiales industriales, plazo de entrega 5 días",
+      tipoProveedor: "moral",
+      password: "password789",
+      versiones: [
+        {
+          version: 1,
+          fecha: "2024-01-12",
           usuario: "admin",
           cambios: "Registro inicial"
         }
@@ -130,6 +180,147 @@ function GestionProveedores({ mode, onClose }) {
         setAlertOpen(false);
       }, 4000);
     }
+  };
+
+  // Función para agregar notificación de solicitud (SOLO para altas)
+  const agregarNotificacionSolicitud = (rfc, correo, nombre, tipoProveedor) => {
+    const nuevaNotificacion = {
+      id: Date.now(),
+      tipo: "solicitud",
+      mensaje: `Nueva solicitud de proveedor`,
+      datos: {
+        rfc,
+        correo,
+        nombre,
+        tipoProveedor,
+        fecha: new Date().toLocaleString()
+      },
+      leida: false
+    };
+    
+    setNotifications(prev => [nuevaNotificacion, ...prev]);
+  };
+
+  // Función para marcar notificación como leída
+  const marcarComoLeida = (id) => {
+    setNotifications(prev => 
+      prev.map(notif => 
+        notif.id === id ? { ...notif, leida: true } : notif
+      )
+    );
+  };
+
+  // Componente de Campana de Notificaciones (SOLO para solicitudes - solo visible en modo alta)
+  const CampanaNotificaciones = () => {
+    const notificacionesNoLeidas = notifications.filter(n => !n.leida).length;
+
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setShowNotifications(!showNotifications)}
+          className={`relative p-2 transition-all duration-300 ${
+            notificacionesNoLeidas > 0 
+              ? 'text-red-500 hover:text-red-600 transform hover:scale-110' 
+              : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          {/* Campana con diseño especial cuando hay notificaciones */}
+          <div className="relative">
+            <Bell className={`w-7 h-7 transition-all duration-300 ${
+              notificacionesNoLeidas > 0 ? 'animate-bounce' : ''
+            }`} />
+            
+            {/* Efecto de brillo cuando hay notificaciones */}
+            {notificacionesNoLeidas > 0 && (
+              <div className="absolute inset-0 bg-red-400 rounded-full opacity-20 animate-ping"></div>
+            )}
+          </div>
+          
+          {/* Contador de notificaciones */}
+          {notificacionesNoLeidas > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center border-2 border-white shadow-lg animate-pulse">
+              {notificacionesNoLeidas}
+            </span>
+          )}
+        </button>
+
+        {showNotifications && (
+          <>
+            <div 
+              className="fixed inset-0 z-40"
+              onClick={() => setShowNotifications(false)}
+            />
+            <div className="absolute right-0 top-12 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 className="font-semibold text-gray-800">Solicitudes de Alta</h3>
+                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">
+                  {notificacionesNoLeidas} nuevas
+                </span>
+              </div>
+              
+              <div className="max-h-96 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    No hay solicitudes pendientes
+                  </div>
+                ) : (
+                  notifications.map(notif => (
+                    <div
+                      key={notif.id}
+                      className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
+                        !notif.leida ? 'bg-red-50 border-l-4 border-l-red-500' : ''
+                      }`}
+                      onClick={() => marcarComoLeida(notif.id)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-3 h-3 rounded-full mt-1 flex-shrink-0 ${
+                          !notif.leida ? 'bg-red-500 animate-pulse' : 'bg-gray-300'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={`text-xs font-medium px-2 py-1 rounded ${
+                              !notif.leida 
+                                ? 'bg-red-100 text-red-800 border border-red-200' 
+                                : 'bg-green-100 text-green-800'
+                            }`}>
+                              {!notif.leida ? 'Nueva Solicitud' : 'Solicitud'}
+                            </span>
+                            <span className="text-xs text-gray-500">{notif.datos.fecha}</span>
+                          </div>
+                          
+                          <p className={`font-medium text-sm mb-2 ${
+                            !notif.leida ? 'text-red-700' : 'text-gray-800'
+                          }`}>
+                            {notif.datos.nombre}
+                          </p>
+                          
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <div><strong className="text-gray-700">RFC:</strong> {notif.datos.rfc}</div>
+                            <div><strong className="text-gray-700">Correo:</strong> {notif.datos.correo}</div>
+                            <div><strong className="text-gray-700">Tipo:</strong> {notif.datos.tipoProveedor === 'fisica' ? 'Persona Física' : 'Persona Moral'}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              
+              {notifications.length > 0 && (
+                <div className="p-3 border-t border-gray-200 bg-gray-50">
+                  <button
+                    onClick={() => setNotifications(prev => prev.map(n => ({ ...n, leida: true })))}
+                    className="w-full text-center text-xs text-red-600 hover:text-red-800 font-medium py-2 hover:bg-red-50 rounded transition-colors"
+                  >
+                    Marcar todas como leídas
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    );
   };
 
   // Componente de Alertas Interno
@@ -271,16 +462,38 @@ function GestionProveedores({ mode, onClose }) {
   const handleAltaSubmit = (e) => {
     e.preventDefault();
     
-    // Validaciones básicas
-    if (!formAlta.nombre || !formAlta.correo || !formAlta.telefono || !formAlta.password || 
-        !formAlta.direccionFiscal || !formAlta.rfc || !formAlta.cuentaClabe || !formAlta.banco) {
-      showAlert('error', 'Campos Requeridos', 'Por favor complete todos los campos obligatorios marcados con *');
+    // Validaciones de RFC, CORREO, NOMBRE y CONTRASEÑA
+    if (!formAlta.nombre.trim()) {
+      showAlert('error', 'Campo Requerido', 'Por favor ingrese el nombre del proveedor');
+      return;
+    }
+
+    if (!formAlta.correo.trim()) {
+      showAlert('error', 'Campo Requerido', 'Por favor ingrese el correo electrónico');
+      return;
+    }
+
+    if (!formAlta.rfc.trim()) {
+      showAlert('error', 'Campo Requerido', 'Por favor ingrese el RFC');
+      return;
+    }
+
+    if (!formAlta.password.trim()) {
+      showAlert('error', 'Campo Requerido', 'Por favor ingrese la contraseña');
       return;
     }
 
     console.log("Datos de alta:", formAlta);
     
-    showAlert('success', 'Proveedor Registrado', 'El proveedor ha sido dado de alta exitosamente en el sistema.');
+    // Agregar notificación de solicitud (SOLO para altas)
+    agregarNotificacionSolicitud(
+      formAlta.rfc,
+      formAlta.correo,
+      formAlta.nombre,
+      formAlta.tipoProveedor
+    );
+    
+    showAlert('success', 'Solicitud Enviada', 'La solicitud de alta de proveedor ha sido enviada. Se notificará al administrador.');
     
     // Limpiar formulario después del éxito
     setFormAlta({
@@ -313,32 +526,42 @@ function GestionProveedores({ mode, onClose }) {
 
     // Generar descripción de cambios
     const cambios = [];
-    if (formModificacion.nombre !== proveedores.find(p => p.rfc === formModificacion.rfc)?.nombre) {
+    const proveedorOriginal = proveedores.find(p => p.rfc === formModificacion.rfc);
+    
+    if (formModificacion.nombre !== proveedorOriginal?.nombre) {
       cambios.push("Nombre actualizado");
     }
-    if (formModificacion.correo !== proveedores.find(p => p.rfc === formModificacion.rfc)?.correo) {
+    if (formModificacion.correo !== proveedorOriginal?.correo) {
       cambios.push("Correo actualizado");
     }
-    if (formModificacion.telefono !== proveedores.find(p => p.rfc === formModificacion.rfc)?.telefono) {
+    if (formModificacion.telefono !== proveedorOriginal?.telefono) {
       cambios.push("Teléfono actualizado");
     }
-    if (formModificacion.observaciones !== proveedores.find(p => p.rfc === formModificacion.rfc)?.observaciones) {
+    if (formModificacion.direccionFiscal !== proveedorOriginal?.direccionFiscal) {
+      cambios.push("Dirección fiscal actualizada");
+    }
+    if (formModificacion.observaciones !== proveedorOriginal?.observaciones) {
       cambios.push("Observaciones actualizadas");
+    }
+    if (formModificacion.tipoProveedor !== proveedorOriginal?.tipoProveedor) {
+      cambios.push("Tipo de proveedor cambiado");
     }
 
     const nuevaVersion = {
       version: (formModificacion.ultimaModificacion?.version || 0) + 1,
       fecha: new Date().toISOString().split('T')[0],
-      usuario: "admin", // En un sistema real, esto vendría del usuario autenticado
+      usuario: "admin",
       cambios: cambios.length > 0 ? cambios.join(", ") : "Sin cambios específicos registrados"
     };
 
     console.log("Datos de modificación:", formModificacion);
     console.log("Nueva versión:", nuevaVersion);
     
+    // NOTA: Las modificaciones NO generan notificaciones en la campanita
+    // Solo se registran en el historial de versiones
+    
     showAlert('success', 'Proveedor Actualizado', `Los datos del proveedor han sido actualizados correctamente. Se registró la versión ${nuevaVersion.version}.`);
     
-    // En un sistema real, aquí actualizarías la base de datos
     setFormModificacion({
       busqueda: "",
       nombre: "",
@@ -363,7 +586,6 @@ function GestionProveedores({ mode, onClose }) {
     setFormBaja(prev => ({ 
       ...prev, 
       [name]: value,
-      // Si se cambia el motivo y no es "otros", limpiar el campo motivoOtros
       ...(name === 'motivoBaja' && value !== 'otros' && { motivoOtros: '' })
     }));
   };
@@ -376,7 +598,6 @@ function GestionProveedores({ mode, onClose }) {
       return;
     }
 
-    // Validar que si el motivo es "otros", se complete el campo motivoOtros
     if (formBaja.motivoBaja === 'otros' && !formBaja.motivoOtros.trim()) {
       showAlert('error', 'Motivo Requerido', 'Por favor especifique el motivo de la baja');
       return;
@@ -396,7 +617,7 @@ function GestionProveedores({ mode, onClose }) {
         showAlert('success', 'Proveedor Dado de Baja', 'El proveedor ha sido dado de baja exitosamente del sistema.');
         setFormBaja({
           busqueda: "",
-          fechaBaja: getFechaActual(), // Mantener la fecha actual al limpiar
+          fechaBaja: getFechaActual(),
           motivoBaja: "",
           motivoOtros: ""
         });
@@ -448,7 +669,7 @@ function GestionProveedores({ mode, onClose }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de Proveedor *
+                  Tipo de Proveedor
                 </label>
                 <select
                   name="tipoProveedor"
@@ -493,36 +714,6 @@ function GestionProveedores({ mode, onClose }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Teléfono *
-                </label>
-                <input
-                  type="tel"
-                  name="telefono"
-                  value={formAlta.telefono}
-                  onChange={handleAltaChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="+52 123 456 7890"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dirección Fiscal *
-                </label>
-                <input
-                  type="text"
-                  name="direccionFiscal"
-                  value={formAlta.direccionFiscal}
-                  onChange={handleAltaChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Dirección completa"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
                   RFC *
                 </label>
                 <input
@@ -536,9 +727,38 @@ function GestionProveedores({ mode, onClose }) {
                 />
               </div>
 
+              {/* Campos NO obligatorios (sin validación) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cuenta CLABE *
+                  Teléfono
+                </label>
+                <input
+                  type="tel"
+                  name="telefono"
+                  value={formAlta.telefono}
+                  onChange={handleAltaChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="+52 123 456 7890"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Dirección Fiscal
+                </label>
+                <input
+                  type="text"
+                  name="direccionFiscal"
+                  value={formAlta.direccionFiscal}
+                  onChange={handleAltaChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Dirección completa"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cuenta CLABE
                 </label>
                 <input
                   type="text"
@@ -547,13 +767,12 @@ function GestionProveedores({ mode, onClose }) {
                   onChange={handleAltaChange}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="18 dígitos"
-                  required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Banco *
+                  Banco
                 </label>
                 <input
                   type="text"
@@ -562,7 +781,6 @@ function GestionProveedores({ mode, onClose }) {
                   onChange={handleAltaChange}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Nombre del banco"
-                  required
                 />
               </div>
 
@@ -608,7 +826,7 @@ function GestionProveedores({ mode, onClose }) {
                 type="submit"
                 className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition duration-200 font-medium"
               >
-                Registrar Proveedor
+                Enviar Solicitud
               </button>
               <button
                 type="button"
@@ -646,6 +864,9 @@ function GestionProveedores({ mode, onClose }) {
                   Buscar
                 </button>
               </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Ejemplos: "Juan Pérez", "Tecnología Avanzada", "PEGJ800101ABC", "TASA123456789"
+              </p>
             </div>
 
             {proveedorEncontrado && (
@@ -712,61 +933,57 @@ function GestionProveedores({ mode, onClose }) {
                     />
                   </div>
 
-                  {formModificacion.tipoProveedor === "moral" && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Dirección Fiscal
-                        </label>
-                        <input
-                          type="text"
-                          name="direccionFiscal"
-                          value={formModificacion.direccionFiscal}
-                          onChange={handleModificacionChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Dirección Fiscal
+                    </label>
+                    <input
+                      type="text"
+                      name="direccionFiscal"
+                      value={formModificacion.direccionFiscal}
+                      onChange={handleModificacionChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          RFC
-                        </label>
-                        <input
-                          type="text"
-                          name="rfc"
-                          value={formModificacion.rfc}
-                          onChange={handleModificacionChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      RFC
+                    </label>
+                    <input
+                      type="text"
+                      name="rfc"
+                      value={formModificacion.rfc}
+                      onChange={handleModificacionChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Cuenta CLABE
-                        </label>
-                        <input
-                          type="text"
-                          name="cuentaClabe"
-                          value={formModificacion.cuentaClabe}
-                          onChange={handleModificacionChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cuenta CLABE
+                    </label>
+                    <input
+                      type="text"
+                      name="cuentaClabe"
+                      value={formModificacion.cuentaClabe}
+                      onChange={handleModificacionChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Banco
-                        </label>
-                        <input
-                          type="text"
-                          name="banco"
-                          value={formModificacion.banco}
-                          onChange={handleModificacionChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Banco
+                    </label>
+                    <input
+                      type="text"
+                      name="banco"
+                      value={formModificacion.banco}
+                      onChange={handleModificacionChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
 
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -782,7 +999,6 @@ function GestionProveedores({ mode, onClose }) {
                     />
                   </div>
 
-                  {/* Campo de contraseña NO editable - solo lectura */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Contraseña (No editable)
@@ -851,12 +1067,13 @@ function GestionProveedores({ mode, onClose }) {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Fecha de Baja
                 </label>
-                <div className="p-3 border border-gray-300 rounded-lg bg-gray-50">
-                  <p className="text-gray-700 font-medium">{formBaja.fechaBaja}</p>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  La fecha se establece automáticamente a hoy
-                </p>
+                <input
+                  type="date"
+                  name="fechaBaja"
+                  value={formBaja.fechaBaja}
+                  onChange={handleBajaChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
 
               <div>
@@ -879,7 +1096,6 @@ function GestionProveedores({ mode, onClose }) {
                 </select>
               </div>
 
-              {/* Campo para "otros" motivos - solo visible cuando se selecciona "otros" */}
               {formBaja.motivoBaja === 'otros' && (
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -941,7 +1157,7 @@ function GestionProveedores({ mode, onClose }) {
 
   const getDescription = () => {
     switch (mode) {
-      case "alta": return "Complete el formulario para registrar un nuevo proveedor (Persona Física o Moral) en el sistema.";
+      case "alta": return "Complete el formulario para enviar una solicitud de registro de nuevo proveedor. Los campos marcados con * son obligatorios. La solicitud será revisada por el administrador.";
       case "modificacion": return "Busque un proveedor existente y modifique sus datos. Se registrará un historial de cambios.";
       case "baja": return "Busque un proveedor y complete la información requerida para darle de baja del sistema.";
       default: return "Seleccione una operación para gestionar proveedores.";
@@ -950,11 +1166,16 @@ function GestionProveedores({ mode, onClose }) {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">{getTitle()}</h2>
-        <p className="text-gray-600 mt-2">
-          {getDescription()}
-        </p>
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">{getTitle()}</h2>
+          <p className="text-gray-600 mt-2">
+            {getDescription()}
+          </p>
+        </div>
+        
+        {/* Campana de notificaciones (SOLO visible en modo ALTA) */}
+        {mode === "alta" && <CampanaNotificaciones />}
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">

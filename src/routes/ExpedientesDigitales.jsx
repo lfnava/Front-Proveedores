@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Search, Eye, Filter, User, Building, Download, FileText, Receipt, Check, X, Clock, AlertCircle, Info, AlertTriangle, CheckCircle } from "lucide-react";
+import { Search, Eye, User, Building, Download, FileText, Receipt, X, AlertCircle, Info, AlertTriangle, CheckCircle } from "lucide-react";
+import Aprobacion from './Aprobacion';
 
 function ExpedientesDigitales() {
-  // ... (los estados y datos de proveedores y aprobaciones se mantienen igual)
   const [proveedores, setProveedores] = useState([
     {
       id: 1,
@@ -47,7 +47,8 @@ function ExpedientesDigitales() {
       solicitud: "Contrato de Servicios",
       estado: "Pendiente",
       fecha: "2024-01-15",
-      archivo: "contrato_servicios_TA.pdf"
+      archivo: "contrato_servicios_TA.pdf",
+      comentario: ""
     },
     {
       id: 2,
@@ -56,7 +57,8 @@ function ExpedientesDigitales() {
       solicitud: "Orden de Compra",
       estado: "Aprobado",
       fecha: "2024-01-14",
-      archivo: "oc_suministros_001.pdf"
+      archivo: "oc_suministros_001.pdf",
+      comentario: ""
     },
     {
       id: 3,
@@ -65,7 +67,8 @@ function ExpedientesDigitales() {
       solicitud: "Factura Electrónica",
       estado: "Rechazado",
       fecha: "2024-01-13",
-      archivo: "factura_TA_001.pdf"
+      archivo: "factura_TA_001.pdf",
+      comentario: "La factura no cumple con los requisitos de formato establecidos en el contrato."
     },
     {
       id: 4,
@@ -74,7 +77,8 @@ function ExpedientesDigitales() {
       solicitud: "Cotización",
       estado: "Pendiente",
       fecha: "2024-01-12",
-      archivo: "cotizacion_juan_perez.pdf"
+      archivo: "cotizacion_juan_perez.pdf",
+      comentario: ""
     },
     {
       id: 5,
@@ -83,7 +87,8 @@ function ExpedientesDigitales() {
       solicitud: "Anexo Técnico",
       estado: "Aprobado",
       fecha: "2024-01-11",
-      archivo: "anexo_tecnico_suministros.pdf"
+      archivo: "anexo_tecnico_suministros.pdf",
+      comentario: ""
     }
   ]);
 
@@ -93,11 +98,8 @@ function ExpedientesDigitales() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
   const [vistaActual, setVistaActual] = useState("proveedores");
-  const [modalConfirmacion, setModalConfirmacion] = useState(false);
-  const [accionPendiente, setAccionPendiente] = useState(null);
-  const [aprobacionSeleccionada, setAprobacionSeleccionada] = useState(null);
 
-  // Estados para alertas - COPIADO EXACTO DEL EJEMPLO
+  // Estados para alertas
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertConfig, setAlertConfig] = useState({ 
     type: '', 
@@ -107,7 +109,7 @@ function ExpedientesDigitales() {
     onConfirm: null 
   });
 
-  // Función para mostrar alertas - COPIADO EXACTO DEL EJEMPLO
+  // Función para mostrar alertas
   const showAlert = (type, title, message, showConfirm = false, onConfirm = null) => {
     setAlertConfig({ type, title, message, showConfirm, onConfirm });
     setAlertOpen(true);
@@ -119,7 +121,7 @@ function ExpedientesDigitales() {
     }
   };
 
-  // Componente de Alertas - COPIADO EXACTO DEL EJEMPLO
+  // Componente de Alertas
   const Alert = () => {
     if (!alertOpen) return null;
 
@@ -214,71 +216,9 @@ function ExpedientesDigitales() {
     );
   };
 
-  // Función para manejar aprobación/rechazo
-  const manejarAprobacion = (id, accion) => {
-    setAprobaciones(prevAprobaciones => 
-      prevAprobaciones.map(aprobacion => 
-        aprobacion.id === id 
-          ? { 
-              ...aprobacion, 
-              estado: accion === 'aprobar' ? 'Aprobado' : 'Rechazado',
-              fecha: new Date().toISOString().split('T')[0]
-            } 
-          : aprobacion
-      )
-    );
-    setModalConfirmacion(false);
-    setAccionPendiente(null);
-    setAprobacionSeleccionada(null);
-    
-    // Mostrar alerta de éxito usando el sistema de alertas
-    const accionTexto = accion === 'aprobar' ? 'aprobada' : 'rechazada';
-    showAlert('success', 'Acción Completada', `La solicitud ha sido ${accionTexto} exitosamente.`);
-  };
-
-  // Función para abrir modal de confirmación
-  const abrirConfirmacion = (aprobacion, accion) => {
-    setAprobacionSeleccionada(aprobacion);
-    setAccionPendiente(accion);
-    
-    // Usar el sistema de alertas para la confirmación
-    showAlert(
-      'warning', 
-      accion === 'aprobar' ? 'Confirmar Aprobación' : 'Confirmar Rechazo',
-      `¿Está seguro de ${accion === 'aprobar' ? 'aprobar' : 'rechazar'} esta solicitud?\n\nProveedor: ${aprobacion.proveedorNombre}\nSolicitud: ${aprobacion.solicitud}\nID: #${aprobacion.id}`,
-      true,
-      () => manejarAprobacion(aprobacion.id, accion)
-    );
-  };
-
-  // Eliminar el modal de confirmación separado ya que usaremos las alertas
-
-  // Función para obtener el color del estado de aprobación
-  const getEstadoColor = (estado) => {
-    switch (estado) {
-      case "Aprobado":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "Rechazado":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "Pendiente":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  // Función para obtener el icono del estado
-  const getEstadoIcono = (estado) => {
-    switch (estado) {
-      case "Aprobado":
-        return <Check className="w-3 h-3" />;
-      case "Rechazado":
-        return <X className="w-3 h-3" />;
-      case "Pendiente":
-        return <Clock className="w-3 h-3" />;
-      default:
-        return <Clock className="w-3 h-3" />;
-    }
+  // Función para manejar cambios en aprobaciones
+  const handleAprobacionChange = (nuevasAprobaciones) => {
+    setAprobaciones(nuevasAprobaciones);
   };
 
   // Función para generar archivo Excel con formato
@@ -418,7 +358,6 @@ function ExpedientesDigitales() {
       `ordenes_compra_${proveedor.nombre.replace(/\s+/g, '_')}`
     );
     
-    // Usar el sistema de alertas para mostrar éxito
     showAlert('success', 'Descarga Exitosa', `Las órdenes de compra de ${proveedor.nombre} se han descargado correctamente.`);
   };
 
@@ -470,7 +409,6 @@ function ExpedientesDigitales() {
       `facturas_${proveedor.nombre.replace(/\s+/g, '_')}`
     );
     
-    // Usar el sistema de alertas para mostrar éxito
     showAlert('success', 'Descarga Exitosa', `Las facturas de ${proveedor.nombre} se han descargado correctamente.`);
   };
 
@@ -560,66 +498,49 @@ function ExpedientesDigitales() {
         </div>
       </div>
 
-      {/* Barra de herramientas */}
-      <div className="bg-white rounded-lg border border-lightBlue p-4 mb-6">
-        <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
-          {/* Búsqueda */}
-          <div className="flex-1 w-full lg:w-auto">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-midBlue w-4 h-4" />
-              <input
-                type="text"
-                placeholder={
-                  vistaActual === "proveedores" 
-                    ? "Buscar por nombre, email o RFC..." 
-                    : "Buscar por proveedor o solicitud..."
-                }
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-lightBlue rounded-lg focus:ring-2 focus:ring-midBlue focus:border-midBlue text-darkBlue"
-              />
+      {/* Barra de herramientas SOLO para Proveedores */}
+      {vistaActual === "proveedores" && (
+        <div className="bg-white rounded-lg border border-lightBlue p-4 mb-6">
+          <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
+            {/* Búsqueda */}
+            <div className="flex-1 w-full lg:w-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-midBlue w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, email o RFC..."
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-lightBlue rounded-lg focus:ring-2 focus:ring-midBlue focus:border-midBlue text-darkBlue"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Filtros */}
-          <div className="flex flex-wrap gap-2">
-            {vistaActual === "proveedores" ? (
-              <>
-                <select
-                  value={filtroTipo}
-                  onChange={(e) => setFiltroTipo(e.target.value)}
-                  className="px-3 py-2 border border-lightBlue rounded-lg focus:ring-2 focus:ring-midBlue focus:border-midBlue text-darkBlue"
-                >
-                  <option value="">Todos los tipos</option>
-                  <option value="fisica">Persona Física</option>
-                  <option value="moral">Persona Moral</option>
-                </select>
-                
-                <select
-                  value={filtroEstatus}
-                  onChange={(e) => setFiltroEstatus(e.target.value)}
-                  className="px-3 py-2 border border-lightBlue rounded-lg focus:ring-2 focus:ring-midBlue focus:border-midBlue text-darkBlue"
-                >
-                  <option value="">Todos los estatus</option>
-                  <option value="Activo">Activo</option>
-                  <option value="Inactivo">Inactivo</option>
-                </select>
-              </>
-            ) : (
+            {/* Filtros para Proveedores */}
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={filtroTipo}
+                onChange={(e) => setFiltroTipo(e.target.value)}
+                className="px-3 py-2 border border-lightBlue rounded-lg focus:ring-2 focus:ring-midBlue focus:border-midBlue text-darkBlue"
+              >
+                <option value="">Todos los tipos</option>
+                <option value="fisica">Persona Física</option>
+                <option value="moral">Persona Moral</option>
+              </select>
+              
               <select
                 value={filtroEstatus}
                 onChange={(e) => setFiltroEstatus(e.target.value)}
                 className="px-3 py-2 border border-lightBlue rounded-lg focus:ring-2 focus:ring-midBlue focus:border-midBlue text-darkBlue"
               >
-                <option value="">Todos los estados</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Aprobado">Aprobado</option>
-                <option value="Rechazado">Rechazado</option>
+                <option value="">Todos los estatus</option>
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
               </select>
-            )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Tabla de Proveedores */}
       {vistaActual === "proveedores" && (
@@ -724,116 +645,13 @@ function ExpedientesDigitales() {
         </div>
       )}
 
-      {/* Tabla de Aprobaciones */}
+      {/* Tabla de Aprobaciones - Usando el componente separado */}
       {vistaActual === "aprobaciones" && (
-        <div className="bg-white rounded-lg border border-lightBlue overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-lightBlue border-b border-midBlue">
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-darkBlue uppercase tracking-wider">
-                    ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-darkBlue uppercase tracking-wider">
-                    Nombre del Proveedor
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-darkBlue uppercase tracking-wider">
-                    Solicitud
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-darkBlue uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-darkBlue uppercase tracking-wider">
-                    Fecha
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-darkBlue uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-lightBlue">
-                {aprobaciones
-                  .filter(aprobacion => {
-                    const coincideBusqueda = 
-                      aprobacion.proveedorNombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-                      aprobacion.solicitud.toLowerCase().includes(busqueda.toLowerCase());
-                    const coincideEstado = !filtroEstatus || aprobacion.estado === filtroEstatus;
-                    return coincideBusqueda && coincideEstado;
-                  })
-                  .map((aprobacion) => (
-                    <tr key={aprobacion.id} className="hover:bg-beige transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-darkBlue">
-                          #{aprobacion.id}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-darkBlue">
-                          {aprobacion.proveedorNombre}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-midBlue">
-                        {aprobacion.solicitud}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${getEstadoColor(aprobacion.estado)}`}>
-                          {getEstadoIcono(aprobacion.estado)}
-                          {aprobacion.estado}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-midBlue">
-                        {new Date(aprobacion.fecha).toLocaleDateString('es-MX')}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          {aprobacion.estado === "Pendiente" && (
-                            <>
-                              <button
-                                onClick={() => abrirConfirmacion(aprobacion, 'aprobar')}
-                                className="text-green-600 hover:text-green-800 transition p-1"
-                                title="Aprobar solicitud"
-                              >
-                                <Check className="w-5 h-5" />
-                              </button>
-                              <button
-                                onClick={() => abrirConfirmacion(aprobacion, 'rechazar')}
-                                className="text-red-600 hover:text-red-800 transition p-1"
-                                title="Rechazar solicitud"
-                              >
-                                <X className="w-5 h-5" />
-                              </button>
-                            </>
-                          )}
-                          {(aprobacion.estado === "Aprobado" || aprobacion.estado === "Rechazado") && (
-                            <span className="text-xs text-gray-500 italic">
-                              Resuelto
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mensaje cuando no hay resultados */}
-          {aprobaciones.filter(aprobacion => {
-            const coincideBusqueda = 
-              aprobacion.proveedorNombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-              aprobacion.solicitud.toLowerCase().includes(busqueda.toLowerCase());
-            const coincideEstado = !filtroEstatus || aprobacion.estado === filtroEstatus;
-            return coincideBusqueda && coincideEstado;
-          }).length === 0 && (
-            <div className="text-center py-8">
-              <div className="text-midBlue mb-2">
-                <Search className="w-12 h-12 mx-auto" />
-              </div>
-              <p className="text-darkBlue text-lg">No se encontraron aprobaciones</p>
-              <p className="text-midBlue">Intenta ajustar los filtros de búsqueda</p>
-            </div>
-          )}
-        </div>
+        <Aprobacion 
+          aprobaciones={aprobaciones}
+          onAprobacionChange={handleAprobacionChange}
+          showAlert={showAlert}
+        />
       )}
 
       {/* Modal de detalles del proveedor */}
@@ -948,7 +766,7 @@ function ExpedientesDigitales() {
         </>
       )}
 
-      {/* Alertas - EXACTAMENTE COMO EN EL EJEMPLO */}
+      {/* Alertas */}
       <Alert />
     </div>
   );
