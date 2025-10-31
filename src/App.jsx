@@ -10,6 +10,8 @@ import VerificacionR from "./routes/VerificacionR.jsx";
 import Aprobacion from "./routes/Aprobacion.jsx";
 import DashboardApro from "./routes/DashboardApro.jsx";
 import Graficas from "./routes/Graficas.jsx";
+import Reportes from "./routes/Reportes.jsx";
+
 
 
 function App() {
@@ -26,6 +28,8 @@ function App() {
         <Route path="/aprobacion" element={<Aprobacion />} />
         <Route path="/dashboardapro" element={<DashboardApro />} />
         <Route path="/graficas" element={<Graficas />} />
+        <Route path="/reportes" element={<Reportes />} />
+
 
     </Routes>
   );

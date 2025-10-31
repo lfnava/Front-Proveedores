@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Check, X, Clock, AlertCircle, Info, AlertTriangle, CheckCircle } from "lucide-react";
+import { Search, Check, X, Clock, Download, FileText, FileSpreadsheet } from "lucide-react";
 
 function Aprobacion({ aprobaciones, onAprobacionChange, showAlert }) {
   const [busqueda, setBusqueda] = useState("");
@@ -28,6 +28,231 @@ function Aprobacion({ aprobaciones, onAprobacionChange, showAlert }) {
     
     const accionTexto = accion === 'aprobar' ? 'aprobada' : 'rechazada';
     showAlert('success', 'Acción Completada', `La solicitud ha sido ${accionTexto} exitosamente.`);
+  };
+
+  // Función para generar archivo Excel con formato profesional
+  const generarExcelConFormato = (datos, cabeceras, titulo, nombreArchivo) => {
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            table {
+              border-collapse: collapse;
+              width: 100%;
+              font-family: Arial, sans-serif;
+            }
+            .titulo {
+              background-color: #2F4156;
+              color: white;
+              font-size: 18px;
+              font-weight: bold;
+              padding: 15px;
+              text-align: center;
+              border: 1px solid #2F4156;
+            }
+            .cabecera {
+              background-color: #567C8D;
+              color: white;
+              font-weight: bold;
+              padding: 10px;
+              border: 1px solid #567C8D;
+              text-align: center;
+            }
+            .fila-datos {
+              background-color: #FFFFFF;
+            }
+            .fila-datos:nth-child(even) {
+              background-color: #C8D9E6;
+            }
+            .celda {
+              padding: 8px;
+              border: 1px solid #567C8D;
+              text-align: left;
+            }
+            .celda-numero {
+              text-align: right;
+              padding: 8px;
+              border: 1px solid #567C8D;
+            }
+            .celda-centro {
+              text-align: center;
+              padding: 8px;
+              border: 1px solid #567C8D;
+            }
+          </style>
+        </head>
+        <body>
+          <table>
+            <tr>
+              <td colspan="${cabeceras.length}" class="titulo">${titulo}</td>
+            </tr>
+            <tr>
+              ${cabeceras.map(cabecera => `<td class="cabecera">${cabecera}</td>`).join('')}
+            </tr>
+            ${datos.map((fila, index) => `
+              <tr class="fila-datos">
+                ${fila.map((celda, celdaIndex) => {
+                  const esNumero = !isNaN(parseFloat(celda)) && isFinite(celda);
+                  const esCentro = cabeceras[celdaIndex] === 'ESTATUS' || cabeceras[celdaIndex] === 'Fecha';
+                  const clase = esNumero ? 'celda-numero' : (esCentro ? 'celda-centro' : 'celda');
+                  return `<td class="${clase}">${celda}</td>`;
+                }).join('')}
+              </tr>
+            `).join('')}
+          </table>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${nombreArchivo}.xls`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Función para descargar Excel
+  const descargarExcel = (aprobacion) => {
+    const tipoDocumento = getTipoDocumento(aprobacion.solicitud);
+    let datos = [];
+    let cabeceras = [];
+    let titulo = '';
+    let nombreArchivo = '';
+
+    if (tipoDocumento === 'orden-compra') {
+      datos = [
+        {
+          Orden: `OC-2024-${aprobacion.id.toString().padStart(3, '0')}`,
+          Servicio: aprobacion.solicitud,
+          Factura: `F-${aprobacion.id}-2024`,
+          UUID: `uuid-${aprobacion.id}-${Date.now()}`,
+          Fecha: new Date(aprobacion.fecha).toLocaleDateString('es-MX'),
+          SUBTOTAL: "10000.00",
+          IVA: "1600.00",
+          TOTAL: "11600.00",
+          ESTATUS: aprobacion.estado,
+          PROYECTO: "Proyecto Principal"
+        }
+      ];
+      cabeceras = ["Orden", "Servicio", "Factura", "UUID", "Fecha", "SUBTOTAL", "IVA", "TOTAL", "ESTATUS", "PROYECTO"];
+      titulo = `MBQ ORDEN DE COMPRA - ${aprobacion.proveedorNombre.toUpperCase()}`;
+      nombreArchivo = `orden_compra_${aprobacion.proveedorNombre.replace(/\s+/g, '_')}_${aprobacion.id}`;
+    } else {
+      datos = [
+        {
+          Orden: `OC-2024-${aprobacion.id.toString().padStart(3, '0')}`,
+          Servicio: aprobacion.solicitud,
+          Factura: `F-${aprobacion.id}-2024`,
+          UUID: `uuid-${aprobacion.id}-${Date.now()}`,
+          Fecha: new Date(aprobacion.fecha).toLocaleDateString('es-MX'),
+          SUBTOTAL: "8500.00",
+          IVA: "1360.00",
+          TOTAL: "9860.00",
+          ESTATUS: aprobacion.estado,
+          ADJUNTO: `documento_${aprobacion.id}.pdf`
+        }
+      ];
+      cabeceras = ["Orden", "Servicio", "Factura", "UUID", "Fecha", "SUBTOTAL", "IVA", "TOTAL", "ESTATUS", "ADJUNTO"];
+      titulo = `MBQ DOCUMENTO - ${aprobacion.proveedorNombre.toUpperCase()}`;
+      nombreArchivo = `documento_${aprobacion.proveedorNombre.replace(/\s+/g, '_')}_${aprobacion.id}`;
+    }
+
+    const filas = datos.map(doc => [
+      doc.Orden,
+      doc.Servicio,
+      doc.Factura,
+      doc.UUID,
+      doc.Fecha,
+      `$${parseFloat(doc.SUBTOTAL).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`,
+      `$${parseFloat(doc.IVA).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`,
+      `$${parseFloat(doc.TOTAL).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`,
+      doc.ESTATUS,
+      tipoDocumento === 'orden-compra' ? doc.PROYECTO : doc.ADJUNTO
+    ]);
+
+    generarExcelConFormato(filas, cabeceras, titulo, nombreArchivo);
+    showAlert('success', 'Descarga Exitosa', `El archivo Excel se ha descargado correctamente.`);
+  };
+
+  // Función para descargar PDF real
+  const descargarPDF = (aprobacion) => {
+    // Crear contenido PDF usando una aproximación simple pero efectiva
+    const pdfContent = `
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+
+4 0 obj
+<< /Length 1000 >>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+(DOCUMENTO DE APROBACIÓN) Tj
+0 -20 Td
+(ID: #${aprobacion.id}) Tj
+0 -40 Td
+(Proveedor: ${aprobacion.proveedorNombre}) Tj
+0 -20 Td
+(Solicitud: ${aprobacion.solicitud}) Tj
+0 -20 Td
+(Estado: ${aprobacion.estado}) Tj
+0 -20 Td
+(Fecha: ${new Date(aprobacion.fecha).toLocaleDateString('es-MX')}) Tj
+${aprobacion.comentario ? `0 -20 Td (Comentario: ${aprobacion.comentario}) Tj` : ''}
+0 -40 Td
+(Documento generado automáticamente - Sistema de Aprobaciones) Tj
+0 -20 Td
+(Fecha de generación: ${new Date().toLocaleDateString('es-MX')}) Tj
+ET
+endstream
+endobj
+
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000234 00000 n 
+0000001390 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1490
+%%EOF
+`;
+
+    // Crear blob con tipo PDF
+    const blob = new Blob([pdfContent], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `documento-${aprobacion.proveedorNombre.replace(/\s+/g, '-')}-${aprobacion.id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showAlert('success', 'Descarga Exitosa', 'El documento PDF se ha descargado correctamente.');
   };
 
   // Función para abrir modal de confirmación de APROBACIÓN
@@ -86,6 +311,47 @@ function Aprobacion({ aprobaciones, onAprobacionChange, showAlert }) {
         return <Clock className="w-3 h-3" />;
       default:
         return <Clock className="w-3 h-3" />;
+    }
+  };
+
+  // Función para determinar el tipo de documento basado en la solicitud
+  const getTipoDocumento = (solicitud) => {
+    if (solicitud.toLowerCase().includes('orden') || solicitud.toLowerCase().includes('compra')) {
+      return 'orden-compra';
+    } else {
+      return 'general';
+    }
+  };
+
+  // Función para alternar entre Excel y PDF
+  const descargarDocumento = (aprobacion) => {
+    // Alternar: si el ID es par -> Excel, si es impar -> PDF
+    const usarExcel = aprobacion.id % 2 === 0;
+    
+    if (usarExcel) {
+      descargarExcel(aprobacion);
+    } else {
+      descargarPDF(aprobacion);
+    }
+  };
+
+  // Función para obtener la configuración del botón de documento
+  const getConfiguracionBoton = (aprobacion) => {
+    const usarExcel = aprobacion.id % 2 === 0;
+    const tipoDocumento = getTipoDocumento(aprobacion.solicitud);
+    
+    if (usarExcel) {
+      return {
+        texto: tipoDocumento === 'orden-compra' ? 'Orden Compra (Excel)' : 'Documento (Excel)',
+        color: 'bg-green-600 hover:bg-green-700',
+        icon: <FileSpreadsheet className="w-3 h-3" />
+      };
+    } else {
+      return {
+        texto: 'Documento (PDF)',
+        color: 'bg-red-600 hover:bg-red-700',
+        icon: <FileText className="w-3 h-3" />
+      };
     }
   };
 
@@ -155,6 +421,9 @@ function Aprobacion({ aprobaciones, onAprobacionChange, showAlert }) {
                   Fecha
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-darkBlue uppercase tracking-wider">
+                  Documento
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-darkBlue uppercase tracking-wider">
                   Comentario
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-darkBlue uppercase tracking-wider">
@@ -163,68 +432,83 @@ function Aprobacion({ aprobaciones, onAprobacionChange, showAlert }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-lightBlue">
-              {aprobacionesFiltradas.map((aprobacion) => (
-                <tr key={aprobacion.id} className="hover:bg-beige transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-darkBlue">
-                      #{aprobacion.id}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-darkBlue">
-                      {aprobacion.proveedorNombre}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-midBlue">
-                    {aprobacion.solicitud}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${getEstadoColor(aprobacion.estado)}`}>
-                      {getEstadoIcono(aprobacion.estado)}
-                      {aprobacion.estado}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-midBlue">
-                    {new Date(aprobacion.fecha).toLocaleDateString('es-MX')}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-midBlue max-w-xs">
-                    {aprobacion.comentario ? (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <p className="text-red-700 text-xs">{aprobacion.comentario}</p>
+              {aprobacionesFiltradas.map((aprobacion) => {
+                const configBoton = getConfiguracionBoton(aprobacion);
+                
+                return (
+                  <tr key={aprobacion.id} className="hover:bg-beige transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-darkBlue">
+                        #{aprobacion.id}
                       </div>
-                    ) : (
-                      <span className="text-gray-400 italic text-xs">Sin comentarios</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
-                      {aprobacion.estado === "Pendiente" && (
-                        <>
-                          <button
-                            onClick={() => abrirConfirmacionAprobacion(aprobacion)}
-                            className="text-green-600 hover:text-green-800 transition p-1"
-                            title="Aprobar solicitud"
-                          >
-                            <Check className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => abrirConfirmacionRechazo(aprobacion)}
-                            className="text-red-600 hover:text-red-800 transition p-1"
-                            title="Rechazar solicitud"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        </>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-darkBlue">
+                        {aprobacion.proveedorNombre}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-midBlue">
+                      {aprobacion.solicitud}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${getEstadoColor(aprobacion.estado)}`}>
+                        {getEstadoIcono(aprobacion.estado)}
+                        {aprobacion.estado}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-midBlue">
+                      {new Date(aprobacion.fecha).toLocaleDateString('es-MX')}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => descargarDocumento(aprobacion)}
+                        className={`flex items-center gap-2 px-3 py-2 text-white rounded-lg transition ${configBoton.color} text-xs font-medium`}
+                        title={`Descargar ${configBoton.texto}`}
+                      >
+                        {configBoton.icon}
+                        <Download className="w-3 h-3" />
+                        {configBoton.texto}
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-midBlue max-w-xs">
+                      {aprobacion.comentario ? (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                          <p className="text-red-700 text-xs">{aprobacion.comentario}</p>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 italic text-xs">Sin comentarios</span>
                       )}
-                      {(aprobacion.estado === "Aprobado" || aprobacion.estado === "Rechazado") && (
-                        <span className="text-xs text-gray-500 italic">
-                          Resuelto
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        {aprobacion.estado === "Pendiente" && (
+                          <>
+                            <button
+                              onClick={() => abrirConfirmacionAprobacion(aprobacion)}
+                              className="text-green-600 hover:text-green-800 transition p-1"
+                              title="Aprobar solicitud"
+                            >
+                              <Check className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => abrirConfirmacionRechazo(aprobacion)}
+                              className="text-red-600 hover:text-red-800 transition p-1"
+                              title="Rechazar solicitud"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                        {(aprobacion.estado === "Aprobado" || aprobacion.estado === "Rechazado") && (
+                          <span className="text-xs text-gray-500 italic">
+                            Resuelto
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

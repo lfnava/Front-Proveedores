@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FileText, Download, Eye, Trash2, Plus, Edit, AlertCircle, CheckCircle2, Info, X } from "lucide-react";
+import { FileText, Download, Eye, Trash2, Plus, Edit, AlertCircle, CheckCircle2, Info, X, FileSpreadsheet } from "lucide-react";
 
 // Componente de gráficas y tabla para usar directamente en el dashboard
 function Graficas({ showAlert }) {
@@ -83,28 +83,360 @@ function Graficas({ showAlert }) {
       `Nombre: ${proveedor.proveedor}\nCategoría: ${proveedor.categoria}\nEstatus: ${proveedor.estatus}\nComentarios: ${proveedor.comentarios.length}`);
   };
 
-  // Función para descargar documentos
-  const handleDownload = (documento, tipo) => {
+  // Función para generar archivo Excel con formato profesional
+  const generarExcelConFormato = (datos, cabeceras, titulo, nombreArchivo) => {
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            table {
+              border-collapse: collapse;
+              width: 100%;
+              font-family: Arial, sans-serif;
+            }
+            .titulo {
+              background-color: #2F4156;
+              color: white;
+              font-size: 18px;
+              font-weight: bold;
+              padding: 15px;
+              text-align: center;
+              border: 1px solid #2F4156;
+            }
+            .cabecera {
+              background-color: #567C8D;
+              color: white;
+              font-weight: bold;
+              padding: 10px;
+              border: 1px solid #567C8D;
+              text-align: center;
+            }
+            .fila-datos {
+              background-color: #FFFFFF;
+            }
+            .fila-datos:nth-child(even) {
+              background-color: #C8D9E6;
+            }
+            .celda {
+              padding: 8px;
+              border: 1px solid #567C8D;
+              text-align: left;
+            }
+            .celda-numero {
+              text-align: right;
+              padding: 8px;
+              border: 1px solid #567C8D;
+            }
+            .celda-centro {
+              text-align: center;
+              padding: 8px;
+              border: 1px solid #567C8D;
+            }
+          </style>
+        </head>
+        <body>
+          <table>
+            <tr>
+              <td colspan="${cabeceras.length}" class="titulo">${titulo}</td>
+            </tr>
+            <tr>
+              ${cabeceras.map(cabecera => `<td class="cabecera">${cabecera}</td>`).join('')}
+            </tr>
+            ${datos.map((fila, index) => `
+              <tr class="fila-datos">
+                ${fila.map((celda, celdaIndex) => {
+                  const esNumero = !isNaN(parseFloat(celda)) && isFinite(celda);
+                  const esCentro = cabeceras[celdaIndex] === 'ESTATUS' || cabeceras[celdaIndex] === 'Fecha';
+                  const clase = esNumero ? 'celda-numero' : (esCentro ? 'celda-centro' : 'celda');
+                  return `<td class="${clase}">${celda}</td>`;
+                }).join('')}
+              </tr>
+            `).join('')}
+          </table>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${nombreArchivo}.xls`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Función para generar PDF
+  const generarPDF = (documento, tipo, proveedor) => {
+    const contenido = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${documento.nombre}</title>
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            color: #333;
+          }
+          .header { 
+            border-bottom: 3px solid #2F4156; 
+            padding-bottom: 20px; 
+            margin-bottom: 30px; 
+            text-align: center;
+          }
+          .info { 
+            margin: 20px 0; 
+          }
+          .label { 
+            font-weight: bold; 
+            color: #2F4156; 
+            width: 150px;
+            display: inline-block;
+          }
+          .section {
+            margin: 25px 0;
+            padding: 15px;
+            border-left: 4px solid #567C8D;
+            background-color: #f8f9fa;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+          }
+          th {
+            background-color: #567C8D;
+            color: white;
+          }
+          .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>DOCUMENTO - ${tipo.toUpperCase()}</h1>
+          <p>Sistema de Gestión de Proveedores</p>
+        </div>
+        
+        <div class="info">
+          <h2>Información del Documento</h2>
+          <p><span class="label">Documento:</span> ${documento.nombre}</p>
+          <p><span class="label">Tipo:</span> ${tipo}</p>
+          <p><span class="label">Tamaño:</span> ${documento.tamaño}</p>
+          <p><span class="label">Fecha de generación:</span> ${new Date().toLocaleDateString('es-MX')}</p>
+        </div>
+
+        <div class="section">
+          <h2>Información del Proveedor</h2>
+          <p><span class="label">Proveedor:</span> ${proveedor.proveedor}</p>
+          <p><span class="label">Categoría:</span> ${proveedor.categoria}</p>
+          <p><span class="label">Estatus:</span> ${proveedor.estatus}</p>
+        </div>
+
+        <div class="section">
+          <h2>Detalles del Documento</h2>
+          <table>
+            <tr>
+              <th>Campo</th>
+              <th>Valor</th>
+            </tr>
+            <tr>
+              <td>ID del Documento</td>
+              <td>${documento.id}</td>
+            </tr>
+            <tr>
+              <td>Fecha de Emisión</td>
+              <td>${new Date().toLocaleDateString('es-MX')}</td>
+            </tr>
+            <tr>
+              <td>UUID</td>
+              <td>uuid-${documento.id}-${Date.now()}</td>
+            </tr>
+            ${tipo === 'facturas' ? `
+            <tr>
+              <td>SUBTOTAL</td>
+              <td>$10,000.00</td>
+            </tr>
+            <tr>
+              <td>IVA</td>
+              <td>$1,600.00</td>
+            </tr>
+            <tr>
+              <td>TOTAL</td>
+              <td>$11,600.00</td>
+            </tr>
+            ` : ''}
+            ${tipo === 'ordenes-compra' ? `
+            <tr>
+              <td>Orden de Compra</td>
+              <td>OC-2024-${documento.id.toString().padStart(3, '0')}</td>
+            </tr>
+            <tr>
+              <td>PROYECTO</td>
+              <td>Proyecto Principal</td>
+            </tr>
+            ` : ''}
+            ${tipo === 'documentos-respaldo' ? `
+            <tr>
+              <td>Válido Hasta</td>
+              <td>31/12/2024</td>
+            </tr>
+            <tr>
+              <td>Emitido Por</td>
+              <td>Departamento Legal</td>
+            </tr>
+            ` : ''}
+          </table>
+        </div>
+
+        <div class="footer">
+          <p>Documento generado automáticamente - Sistema de Gestión de Proveedores</p>
+          <p>MBQ - ${new Date().getFullYear()}</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([contenido], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${documento.nombre.replace('.pdf', '')}_${tipo}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Función para descargar Excel
+  const descargarExcel = (documento, tipo, proveedor) => {
     try {
-      const contenido = `Documento: ${documento.nombre}\nTipo: ${tipo}\nTamaño: ${documento.tamaño}\nFecha: ${new Date().toLocaleDateString()}\n\nEste es un documento de ejemplo.`;
+      let datos = [];
+      let cabeceras = [];
+      let titulo = '';
+      let nombreArchivo = '';
+
+      // Configurar según el tipo de documento
+      switch(tipo) {
+        case "facturas":
+          datos = [
+            {
+              Proveedor: proveedor.proveedor,
+              Documento: documento.nombre,
+              Tipo: "Factura",
+              Tamaño: documento.tamaño,
+              Categoría: proveedor.categoria,
+              Estatus: proveedor.estatus,
+              Fecha: new Date().toLocaleDateString('es-MX'),
+              UUID: `uuid-${documento.id}-${Date.now()}`,
+              SUBTOTAL: "$10,000.00",
+              IVA: "$1,600.00",
+              TOTAL: "$11,600.00"
+            }
+          ];
+          cabeceras = ["Proveedor", "Documento", "Tipo", "Tamaño", "Categoría", "Estatus", "Fecha", "UUID", "SUBTOTAL", "IVA", "TOTAL"];
+          titulo = `MBQ FACTURA - ${proveedor.proveedor.toUpperCase()}`;
+          nombreArchivo = `factura_${proveedor.proveedor.replace(/\s+/g, '_')}_${documento.id}`;
+          break;
+
+        case "ordenes-compra":
+          datos = [
+            {
+              Proveedor: proveedor.proveedor,
+              Documento: documento.nombre,
+              Tipo: "Orden de Compra",
+              Tamaño: documento.tamaño,
+              Categoría: proveedor.categoria,
+              Estatus: proveedor.estatus,
+              Fecha: new Date().toLocaleDateString('es-MX'),
+              Orden: `OC-2024-${documento.id.toString().padStart(3, '0')}`,
+              PROYECTO: "Proyecto Principal",
+              SUBTOTAL: "$8,500.00",
+              IVA: "$1,360.00",
+              TOTAL: "$9,860.00"
+            }
+          ];
+          cabeceras = ["Proveedor", "Documento", "Tipo", "Tamaño", "Categoría", "Estatus", "Fecha", "Orden", "PROYECTO", "SUBTOTAL", "IVA", "TOTAL"];
+          titulo = `MBQ ORDEN DE COMPRA - ${proveedor.proveedor.toUpperCase()}`;
+          nombreArchivo = `orden_compra_${proveedor.proveedor.replace(/\s+/g, '_')}_${documento.id}`;
+          break;
+
+        case "documentos-respaldo":
+          datos = [
+            {
+              Proveedor: proveedor.proveedor,
+              Documento: documento.nombre,
+              Tipo: "Documento de Respaldo",
+              Tamaño: documento.tamaño,
+              Categoría: proveedor.categoria,
+              Estatus: proveedor.estatus,
+              Fecha: new Date().toLocaleDateString('es-MX'),
+              Descripción: "Documento de respaldo oficial",
+              Válido_Hasta: "31/12/2024",
+              Emitido_Por: "Departamento Legal"
+            }
+          ];
+          cabeceras = ["Proveedor", "Documento", "Tipo", "Tamaño", "Categoría", "Estatus", "Fecha", "Descripción", "Válido_Hasta", "Emitido_Por"];
+          titulo = `MBQ DOCUMENTO RESPALDO - ${proveedor.proveedor.toUpperCase()}`;
+          nombreArchivo = `respaldo_${proveedor.proveedor.replace(/\s+/g, '_')}_${documento.id}`;
+          break;
+
+        default:
+          datos = [
+            {
+              Proveedor: proveedor.proveedor,
+              Documento: documento.nombre,
+              Tipo: tipo,
+              Tamaño: documento.tamaño,
+              Categoría: proveedor.categoria,
+              Estatus: proveedor.estatus,
+              Fecha: new Date().toLocaleDateString('es-MX')
+            }
+          ];
+          cabeceras = ["Proveedor", "Documento", "Tipo", "Tamaño", "Categoría", "Estatus", "Fecha"];
+          titulo = `MBQ DOCUMENTO - ${proveedor.proveedor.toUpperCase()}`;
+          nombreArchivo = `documento_${proveedor.proveedor.replace(/\s+/g, '_')}_${documento.id}`;
+      }
+
+      // Convertir datos a filas
+      const filas = datos.map(doc => 
+        Object.values(doc).map(valor => 
+          typeof valor === 'string' && valor.startsWith('$') ? valor : valor.toString()
+        )
+      );
+
+      generarExcelConFormato(filas, cabeceras, titulo, nombreArchivo);
+      showAlert('success', 'Descarga Completada', `${documento.nombre} se ha descargado correctamente en formato Excel`);
       
-      const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
-      const url = window.URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = documento.nombre;
-      
-      document.body.appendChild(link);
-      link.click();
-      
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      showAlert('success', 'Descarga Completada', `${documento.nombre} se ha descargado correctamente`);
     } catch (error) {
       console.error('Error al descargar:', error);
       showAlert('error', 'Error en Descarga', 'Hubo un problema al descargar el documento');
+    }
+  };
+
+  // Función para descargar PDF
+  const descargarPDF = (documento, tipo, proveedor) => {
+    try {
+      generarPDF(documento, tipo, proveedor);
+      showAlert('success', 'Descarga Completada', `${documento.nombre} se ha descargado correctamente en formato PDF`);
+    } catch (error) {
+      console.error('Error al descargar PDF:', error);
+      showAlert('error', 'Error en Descarga', 'Hubo un problema al descargar el documento PDF');
     }
   };
 
@@ -220,7 +552,7 @@ function Graficas({ showAlert }) {
   };
 
   // Componente para mostrar documentos descargables
-  const DocumentList = ({ documentos, tipo }) => (
+  const DocumentList = ({ documentos, tipo, proveedor }) => (
     <div className="space-y-2">
       {documentos.map((doc) => (
         <div key={doc.id} className="flex items-center justify-between group">
@@ -231,13 +563,22 @@ function Graficas({ showAlert }) {
               <p className="text-xs text-gray-500">{doc.tamaño}</p>
             </div>
           </div>
-          <button
-            onClick={() => handleDownload(doc, tipo)}
-            className="p-2 text-midBlue hover:text-darkBlue hover:bg-lightBlue rounded transition ml-2 flex-shrink-0"
-            title="Descargar"
-          >
-            <Download className="w-4 h-4" />
-          </button>
+          <div className="flex gap-1 ml-2 flex-shrink-0">
+            <button
+              onClick={() => descargarExcel(doc, tipo, proveedor)}
+              className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition"
+              title="Descargar Excel"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => descargarPDF(doc, tipo, proveedor)}
+              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition"
+              title="Descargar PDF"
+            >
+              <FileText className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       ))}
       {documentos.length === 0 && (
@@ -500,15 +841,15 @@ function Graficas({ showAlert }) {
                   </td>
                   
                   <td className="px-6 py-4">
-                    <DocumentList documentos={row.facturas} tipo="facturas" />
+                    <DocumentList documentos={row.facturas} tipo="facturas" proveedor={row} />
                   </td>
                   
                   <td className="px-6 py-4">
-                    <DocumentList documentos={row.ordenesCompra} tipo="ordenes-compra" />
+                    <DocumentList documentos={row.ordenesCompra} tipo="ordenes-compra" proveedor={row} />
                   </td>
                   
                   <td className="px-6 py-4">
-                    <DocumentList documentos={row.documentosRespaldo} tipo="documentos-respaldo" />
+                    <DocumentList documentos={row.documentosRespaldo} tipo="documentos-respaldo" proveedor={row} />
                   </td>
                   
                   <td className="px-6 py-4">
