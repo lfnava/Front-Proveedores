@@ -22,6 +22,7 @@ import {
 // Importar componentes
 import Aprobacion from './Aprobacion';
 import Graficas from './Graficas';
+import Reportes from "./Reportes";
 
 function DashboardApro() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -124,7 +125,7 @@ function DashboardApro() {
     setEditando(false);
   };
 
-  // MENÚ PARA APROBADOR
+  // MENÚ PARA APROBADOR - ACTUALIZADO
   const menuItems = [
     {
       id: "datos-aprobador",
@@ -141,8 +142,8 @@ function DashboardApro() {
       title: "Reportes",
       icon: <BarChart className="w-5 h-5" />,
       submenu: [
-        { id: "facturas-aprobadas", title: "Facturas Aprobadas", icon: <FileCheck className="w-4 h-4" /> },
-        { id: "facturas-rechazadas", title: "Facturas Rechazadas", icon: <FileX className="w-4 h-4" /> },
+        { id: "facturas", title: "Facturas", icon: <FileCheck className="w-4 h-4" /> },
+        { id: "ordenes-compra", title: "Órdenes de Compra", icon: <FileX className="w-4 h-4" /> },
       ],
     },
   ];
@@ -311,7 +312,7 @@ function DashboardApro() {
     );
   };
 
-  // SISTEMA DE MAPEO DE COMPONENTES
+  // SISTEMA DE MAPEO DE COMPONENTES - ACTUALIZADO
   const modalComponents = {
     // Revisión de Documentos
     "revision-documentos": { 
@@ -323,16 +324,16 @@ function DashboardApro() {
       } 
     },
     
-    // Reportes
-    "facturas-aprobadas": { 
-      component: Graficas, 
-      title: "Reporte de Facturas Aprobadas", 
-      props: { tipoReporte: "aprobadas" } 
+    // Reportes - ACTUALIZADO
+    "facturas": { 
+      component: Reportes, 
+      title: "Reporte de Facturas", 
+      props: { tipoReporte: "facturas" } 
     },
-    "facturas-rechazadas": { 
-      component: Graficas, 
-      title: "Reporte de Facturas Rechazadas", 
-      props: { tipoReporte: "rechazadas" } 
+    "ordenes-compra": { 
+      component: Reportes, 
+      title: "Reporte de Órdenes de Compra", 
+      props: { tipoReporte: "ordenes-compra" } 
     },
     
     // Datos del Aprobador

@@ -1,96 +1,339 @@
-function Reportes() {
+import React, { useState, useEffect } from 'react';
+
+function Reportes({ tipoReporte }) {
+  const [datosReportes, setDatosReportes] = useState([]);
+  const [cargando, setCargando] = useState(true);
+
+  // Datos de ejemplo para Facturas
+  const datosFacturas = [
+    { 
+      proveedor: 'Tecnología S.A.', 
+      aprobadas: 8, 
+      rechazadas: 2,
+      montoAprobado: 125000,
+      montoRechazado: 35000,
+      comentarios: 'Algunas facturas con IVA incorrecto'
+    },
+    { 
+      proveedor: 'Suministros Industriales', 
+      aprobadas: 12, 
+      rechazadas: 1,
+      montoAprobado: 89000,
+      montoRechazado: 8500,
+      comentarios: 'Excelente cumplimiento en plazos'
+    },
+    { 
+      proveedor: 'Servicios Corporativos', 
+      aprobadas: 5, 
+      rechazadas: 3,
+      montoAprobado: 45000,
+      montoRechazado: 28000,
+      comentarios: 'Problemas con formato de facturas'
+    },
+    { 
+      proveedor: 'Logística Express', 
+      aprobadas: 15, 
+      rechazadas: 0,
+      montoAprobado: 210000,
+      montoRechazado: 0,
+      comentarios: 'Proveedor confiable, sin observaciones'
+    },
+    { 
+      proveedor: 'Consultoría Profesional', 
+      aprobadas: 3, 
+      rechazadas: 4,
+      montoAprobado: 60000,
+      montoRechazado: 75000,
+      comentarios: 'Revisar proceso de facturación'
+    }
+  ];
+
+  // Datos de ejemplo para Órdenes de Compra
+  const datosOrdenesCompra = [
+    { 
+      proveedor: 'Materiales de Construcción', 
+      aprobadas: 6, 
+      rechazadas: 1,
+      montoAprobado: 180000,
+      montoRechazado: 25000,
+      comentarios: 'Cumplen con especificaciones técnicas'
+    },
+    { 
+      proveedor: 'Equipos Tecnológicos', 
+      aprobadas: 4, 
+      rechazadas: 2,
+      montoAprobado: 320000,
+      montoRechazado: 150000,
+      comentarios: 'Algunos equipos no cumplen specs'
+    },
+    { 
+      proveedor: 'Insumos de Oficina', 
+      aprobadas: 10, 
+      rechazadas: 0,
+      montoAprobado: 45000,
+      montoRechazado: 0,
+      comentarios: 'Entrega puntual y completa'
+    },
+    { 
+      proveedor: 'Mobiliario Corporativo', 
+      aprobadas: 2, 
+      rechazadas: 3,
+      montoAprobado: 120000,
+      montoRechazado: 180000,
+      comentarios: 'Retrasos en tiempos de entrega'
+    },
+    { 
+      proveedor: 'Servicios de Limpieza', 
+      aprobadas: 8, 
+      rechazadas: 1,
+      montoAprobado: 75000,
+      montoRechazado: 12000,
+      comentarios: 'Buena calidad en servicios'
+    },
+    { 
+      proveedor: 'Seguridad Industrial', 
+      aprobadas: 7, 
+      rechazadas: 0,
+      montoAprobado: 95000,
+      montoRechazado: 0,
+      comentarios: 'Cumplen normas de seguridad'
+    }
+  ];
+
+  useEffect(() => {
+    const cargarDatos = () => {
+      setTimeout(() => {
+        // Seleccionar datos según el tipo de reporte
+        const datos = tipoReporte === 'ordenes-compra' ? datosOrdenesCompra : datosFacturas;
+        setDatosReportes(datos);
+        setCargando(false);
+      }, 500);
+    };
+    
+    cargarDatos();
+  }, [tipoReporte]);
+
+  // Función para manejar cambios en los comentarios
+  const handleComentarioChange = (index, comentario) => {
+    const nuevosDatos = [...datosReportes];
+    nuevosDatos[index].comentarios = comentario;
+    setDatosReportes(nuevosDatos);
+  };
+
+  // Función para limpiar comentario
+  const limpiarComentario = (index) => {
+    const nuevosDatos = [...datosReportes];
+    nuevosDatos[index].comentarios = '';
+    setDatosReportes(nuevosDatos);
+  };
+
+  // Calcular porcentaje de satisfacción
+  const calcularPorcentajeSatisfaccion = (aprobadas, rechazadas) => {
+    const total = aprobadas + rechazadas;
+    if (total === 0) return 100;
+    return ((aprobadas / total) * 100).toFixed(1);
+  };
+
+  const formatearMoneda = (monto) => {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN'
+    }).format(monto);
+  };
+
+  if (cargando) {
+    return (
+      <div className="min-h-screen bg-beige flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-darkBlue mx-auto"></div>
+          <p className="text-darkBlue mt-4 text-lg">Cargando reportes...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-beige p-10">
-      {/* Título principal */}
-      <div className="text-center mb-10">
-        <h1 className="text-5xl font-bold text-darkBlue mb-3">📑 Reportes de Facturas</h1>
-        <p className="text-midBlue text-lg">Consulta el estado de las facturas aprobadas y rechazadas</p>
+    <div className="min-h-screen bg-beige p-4">
+      {/* Header */}
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold text-darkBlue mb-2">
+          {tipoReporte === 'ordenes-compra' ? 'Reporte de Órdenes de Compra' : 'Reporte de Facturas'}
+        </h1>
+        <p className="text-midBlue">
+          {tipoReporte === 'ordenes-compra' 
+            ? 'Seguimiento de órdenes de compra aprobadas y rechazadas' 
+            : 'Seguimiento de facturas aprobadas y rechazadas'
+          }
+        </p>
       </div>
 
-      {/* Contenedor principal */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      {/* Tabla Simplificada */}
+      <div className="bg-white rounded-xl shadow-lg p-4">
+        <h2 className="text-xl font-semibold text-darkBlue mb-4">
+          {tipoReporte === 'ordenes-compra' ? 'Desempeño por Proveedor - Órdenes de Compra' : 'Desempeño por Proveedor - Facturas'}
+        </h2>
         
-        {/* 🟩 Facturas Aprobadas */}
-        <div className="bg-white border border-lightBlue rounded-3xl shadow-lg p-8 hover:shadow-2xl transition-all duration-300">
-          <h2 className="text-3xl font-semibold text-darkBlue mb-6 flex items-center gap-2">
-            ✅ Facturas Aprobadas
-          </h2>
-          <p className="text-midBlue mb-6">
-            Estas son las facturas que han pasado el proceso de revisión y aprobación.
-          </p>
-
-          {/* Tabla simulada */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-lightBlue text-darkBlue">
-                  <th className="p-4">#</th>
-                  <th className="p-4">Proveedor</th>
-                  <th className="p-4">Monto</th>
-                  <th className="p-4">Fecha</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-t hover:bg-blue-50 transition">
-                  <td className="p-4">001</td>
-                  <td className="p-4">Proveedor A</td>
-                  <td className="p-4">$12,000</td>
-                  <td className="p-4">2025-10-01</td>
-                </tr>
-                <tr className="border-t hover:bg-blue-50 transition">
-                  <td className="p-4">002</td>
-                  <td className="p-4">Proveedor B</td>
-                  <td className="p-4">$8,500</td>
-                  <td className="p-4">2025-10-03</td>
-                </tr>
-                <tr className="border-t hover:bg-blue-50 transition">
-                  <td className="p-4">003</td>
-                  <td className="p-4">Proveedor C</td>
-                  <td className="p-4">$15,250</td>
-                  <td className="p-4">2025-10-08</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-lightBlue text-darkBlue">
+                <th className="p-3 font-semibold text-sm">Proveedor</th>
+                <th className="p-3 font-semibold text-sm text-center">
+                  {tipoReporte === 'ordenes-compra' ? 'Órdenes Aprobadas' : 'Facturas Aprobadas'}
+                </th>
+                <th className="p-3 font-semibold text-sm text-center">
+                  {tipoReporte === 'ordenes-compra' ? 'Órdenes Rechazadas' : 'Facturas Rechazadas'}
+                </th>
+                <th className="p-3 font-semibold text-sm text-center">Monto Aprobado</th>
+                <th className="p-3 font-semibold text-sm text-center">Monto Rechazado</th>
+                <th className="p-3 font-semibold text-sm text-center">Porcentaje de Satisfacción</th>
+                <th className="p-3 font-semibold text-sm text-center">Comentarios</th>
+              </tr>
+            </thead>
+            <tbody>
+              {datosReportes.map((proveedor, index) => {
+                const porcentaje = calcularPorcentajeSatisfaccion(
+                  proveedor.aprobadas, 
+                  proveedor.rechazadas
+                );
+                const tieneComentarios = proveedor.comentarios.trim().length > 0;
+                
+                return (
+                  <tr key={proveedor.proveedor} className="border-t hover:bg-blue-50 transition duration-150">
+                    {/* Nombre del Proveedor */}
+                    <td className="p-3 font-medium text-darkBlue text-sm">
+                      {proveedor.proveedor}
+                    </td>
+                    
+                    {/* Aprobadas */}
+                    <td className="p-3 text-center">
+                      <span className="text-green-600 font-semibold">
+                        {proveedor.aprobadas}
+                      </span>
+                    </td>
+                    
+                    {/* Rechazadas */}
+                    <td className="p-3 text-center">
+                      <span className="text-red-600 font-semibold">
+                        {proveedor.rechazadas}
+                      </span>
+                    </td>
+                    
+                    {/* Monto Aprobado */}
+                    <td className="p-3 text-center">
+                      <span className="text-green-600 font-semibold">
+                        {formatearMoneda(proveedor.montoAprobado)}
+                      </span>
+                    </td>
+                    
+                    {/* Monto Rechazado */}
+                    <td className="p-3 text-center">
+                      <span className="text-red-600 font-semibold">
+                        {formatearMoneda(proveedor.montoRechazado)}
+                      </span>
+                    </td>
+                    
+                    {/* Porcentaje de Satisfacción */}
+                    <td className="p-3 text-center">
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                        porcentaje >= 80 
+                          ? 'bg-green-100 text-green-800'
+                          : porcentaje >= 60
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {porcentaje}%
+                      </span>
+                    </td>
+                    
+                    {/* Comentarios - Diseño Compacto */}
+                    <td className="p-3">
+                      <div className="flex items-start space-x-2">
+                        <div className="flex-1 relative">
+                          <textarea
+                            value={proveedor.comentarios}
+                            onChange={(e) => handleComentarioChange(index, e.target.value)}
+                            placeholder="Agregar comentarios..."
+                            className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-midBlue focus:border-midBlue resize-none bg-white"
+                            rows="1"
+                          />
+                        </div>
+                        
+                        {/* Botón de eliminar - Solo muestra cuando hay comentarios */}
+                        {tieneComentarios && (
+                          <button
+                            onClick={() => limpiarComentario(index)}
+                            className="p-1 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded transition duration-200 border border-gray-200 text-xs"
+                            title="Eliminar comentario"
+                          >
+                            Eliminar
+                          </button>
+                        )}
+                      </div>
+                      
+                      {/* Indicador de estado */}
+                      <div className="mt-1 flex justify-between items-center">
+                        <span className={`text-xs ${
+                          tieneComentarios ? 'text-green-600' : 'text-gray-400'
+                        }`}>
+                          {tieneComentarios ? 'Guardado' : 'Sin comentarios'}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
-        {/* 🟥 Facturas Rechazadas */}
-        <div className="bg-white border border-lightBlue rounded-3xl shadow-lg p-8 hover:shadow-2xl transition-all duration-300">
-          <h2 className="text-3xl font-semibold text-darkBlue mb-6 flex items-center gap-2">
-            ❌ Facturas Rechazadas
-          </h2>
-          <p className="text-midBlue mb-6">
-            Estas son las facturas que no cumplieron con los criterios de aprobación.
-          </p>
-
-          {/* Tabla simulada */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-lightBlue text-darkBlue">
-                  <th className="p-4">#</th>
-                  <th className="p-4">Proveedor</th>
-                  <th className="p-4">Monto</th>
-                  <th className="p-4">Motivo</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-t hover:bg-red-50 transition">
-                  <td className="p-4">004</td>
-                  <td className="p-4">Proveedor D</td>
-                  <td className="p-4">$5,700</td>
-                  <td className="p-4">Factura duplicada</td>
-                </tr>
-                <tr className="border-t hover:bg-red-50 transition">
-                  <td className="p-4">005</td>
-                  <td className="p-4">Proveedor E</td>
-                  <td className="p-4">$9,800</td>
-                  <td className="p-4">Datos inconsistentes</td>
-                </tr>
-              </tbody>
-            </table>
+        {/* Resumen Final - Compacto */}
+        <div className="mt-4 pt-3 border-t border-gray-200">
+          <div className="bg-darkBlue text-white rounded-lg p-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+              <div>
+                <p className="text-xs text-lightBlue">Proveedores</p>
+                <p className="text-lg font-bold">{datosReportes.length}</p>
+              </div>
+              <div>
+                <p className="text-xs text-lightBlue">
+                  {tipoReporte === 'ordenes-compra' ? 'Órdenes Aprobadas' : 'Facturas Aprobadas'}
+                </p>
+                <p className="text-lg font-bold">
+                  {datosReportes.reduce((sum, p) => sum + p.aprobadas, 0)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-lightBlue">
+                  {tipoReporte === 'ordenes-compra' ? 'Órdenes Rechazadas' : 'Facturas Rechazadas'}
+                </p>
+                <p className="text-lg font-bold">
+                  {datosReportes.reduce((sum, p) => sum + p.rechazadas, 0)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-lightBlue">Porcentaje</p>
+                <p className="text-lg font-bold">
+                  {(
+                    datosReportes.reduce((sum, p) => 
+                      sum + parseFloat(calcularPorcentajeSatisfaccion(p.aprobadas, p.rechazadas)), 0
+                    ) / datosReportes.length
+                  ).toFixed(1)}%
+                </p>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Información adicional */}
+      <div className="mt-4 text-center text-midBlue text-sm">
+        <p>
+          {tipoReporte === 'ordenes-compra' 
+            ? `Total de órdenes procesadas: ${datosReportes.reduce((sum, p) => sum + p.aprobadas + p.rechazadas, 0)}`
+            : `Total de facturas procesadas: ${datosReportes.reduce((sum, p) => sum + p.aprobadas + p.rechazadas, 0)}`
+          }
+        </p>
       </div>
     </div>
   );
