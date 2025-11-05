@@ -11,40 +11,35 @@ function Reportes({ tipoReporte }) {
       aprobadas: 8, 
       rechazadas: 2,
       montoAprobado: 125000,
-      montoRechazado: 35000,
-      comentarios: 'Algunas facturas con IVA incorrecto'
+      montoRechazado: 35000
     },
     { 
       proveedor: 'Suministros Industriales', 
       aprobadas: 12, 
       rechazadas: 1,
       montoAprobado: 89000,
-      montoRechazado: 8500,
-      comentarios: 'Excelente cumplimiento en plazos'
+      montoRechazado: 8500
     },
     { 
       proveedor: 'Servicios Corporativos', 
       aprobadas: 5, 
       rechazadas: 3,
       montoAprobado: 45000,
-      montoRechazado: 28000,
-      comentarios: 'Problemas con formato de facturas'
+      montoRechazado: 28000
     },
     { 
       proveedor: 'Logística Express', 
       aprobadas: 15, 
       rechazadas: 0,
       montoAprobado: 210000,
-      montoRechazado: 0,
-      comentarios: 'Proveedor confiable, sin observaciones'
+      montoRechazado: 0
     },
     { 
       proveedor: 'Consultoría Profesional', 
       aprobadas: 3, 
       rechazadas: 4,
       montoAprobado: 60000,
-      montoRechazado: 75000,
-      comentarios: 'Revisar proceso de facturación'
+      montoRechazado: 75000
     }
   ];
 
@@ -55,48 +50,42 @@ function Reportes({ tipoReporte }) {
       aprobadas: 6, 
       rechazadas: 1,
       montoAprobado: 180000,
-      montoRechazado: 25000,
-      comentarios: 'Cumplen con especificaciones técnicas'
+      montoRechazado: 25000
     },
     { 
       proveedor: 'Equipos Tecnológicos', 
       aprobadas: 4, 
       rechazadas: 2,
       montoAprobado: 320000,
-      montoRechazado: 150000,
-      comentarios: 'Algunos equipos no cumplen specs'
+      montoRechazado: 150000
     },
     { 
       proveedor: 'Insumos de Oficina', 
       aprobadas: 10, 
       rechazadas: 0,
       montoAprobado: 45000,
-      montoRechazado: 0,
-      comentarios: 'Entrega puntual y completa'
+      montoRechazado: 0
     },
     { 
       proveedor: 'Mobiliario Corporativo', 
       aprobadas: 2, 
       rechazadas: 3,
       montoAprobado: 120000,
-      montoRechazado: 180000,
-      comentarios: 'Retrasos en tiempos de entrega'
+      montoRechazado: 180000
     },
     { 
       proveedor: 'Servicios de Limpieza', 
       aprobadas: 8, 
       rechazadas: 1,
       montoAprobado: 75000,
-      montoRechazado: 12000,
-      comentarios: 'Buena calidad en servicios'
+      montoRechazado: 12000
     },
     { 
       proveedor: 'Seguridad Industrial', 
       aprobadas: 7, 
       rechazadas: 0,
       montoAprobado: 95000,
-      montoRechazado: 0,
-      comentarios: 'Cumplen normas de seguridad'
+      montoRechazado: 0
     }
   ];
 
@@ -112,20 +101,6 @@ function Reportes({ tipoReporte }) {
     
     cargarDatos();
   }, [tipoReporte]);
-
-  // Función para manejar cambios en los comentarios
-  const handleComentarioChange = (index, comentario) => {
-    const nuevosDatos = [...datosReportes];
-    nuevosDatos[index].comentarios = comentario;
-    setDatosReportes(nuevosDatos);
-  };
-
-  // Función para limpiar comentario
-  const limpiarComentario = (index) => {
-    const nuevosDatos = [...datosReportes];
-    nuevosDatos[index].comentarios = '';
-    setDatosReportes(nuevosDatos);
-  };
 
   // Calcular porcentaje de satisfacción
   const calcularPorcentajeSatisfaccion = (aprobadas, rechazadas) => {
@@ -187,7 +162,6 @@ function Reportes({ tipoReporte }) {
                 <th className="p-3 font-semibold text-sm text-center">Monto Aprobado</th>
                 <th className="p-3 font-semibold text-sm text-center">Monto Rechazado</th>
                 <th className="p-3 font-semibold text-sm text-center">Porcentaje de Satisfacción</th>
-                <th className="p-3 font-semibold text-sm text-center">Comentarios</th>
               </tr>
             </thead>
             <tbody>
@@ -196,7 +170,6 @@ function Reportes({ tipoReporte }) {
                   proveedor.aprobadas, 
                   proveedor.rechazadas
                 );
-                const tieneComentarios = proveedor.comentarios.trim().length > 0;
                 
                 return (
                   <tr key={proveedor.proveedor} className="border-t hover:bg-blue-50 transition duration-150">
@@ -244,41 +217,6 @@ function Reportes({ tipoReporte }) {
                       }`}>
                         {porcentaje}%
                       </span>
-                    </td>
-                    
-                    {/* Comentarios - Diseño Compacto */}
-                    <td className="p-3">
-                      <div className="flex items-start space-x-2">
-                        <div className="flex-1 relative">
-                          <textarea
-                            value={proveedor.comentarios}
-                            onChange={(e) => handleComentarioChange(index, e.target.value)}
-                            placeholder="Agregar comentarios..."
-                            className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-midBlue focus:border-midBlue resize-none bg-white"
-                            rows="1"
-                          />
-                        </div>
-                        
-                        {/* Botón de eliminar - Solo muestra cuando hay comentarios */}
-                        {tieneComentarios && (
-                          <button
-                            onClick={() => limpiarComentario(index)}
-                            className="p-1 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded transition duration-200 border border-gray-200 text-xs"
-                            title="Eliminar comentario"
-                          >
-                            Eliminar
-                          </button>
-                        )}
-                      </div>
-                      
-                      {/* Indicador de estado */}
-                      <div className="mt-1 flex justify-between items-center">
-                        <span className={`text-xs ${
-                          tieneComentarios ? 'text-green-600' : 'text-gray-400'
-                        }`}>
-                          {tieneComentarios ? 'Guardado' : 'Sin comentarios'}
-                        </span>
-                      </div>
                     </td>
                   </tr>
                 );
