@@ -11,6 +11,7 @@ import Aprobacion from "./routes/Aprobacion.jsx";
 import DashboardApro from "./routes/DashboardApro.jsx";
 import Graficas from "./routes/Graficas.jsx";
 import Reportes from "./routes/Reportes.jsx";
+import DashboardProvider from "./routes/DashboardProvider.jsx";
 
 
 
@@ -29,6 +30,7 @@ function App() {
         <Route path="/dashboardapro" element={<DashboardApro />} />
         <Route path="/graficas" element={<Graficas />} />
         <Route path="/reportes" element={<Reportes />} />
+        <Route path="/dashboardprovider" element={<DashboardProvider />} />
 
 
     </Routes>
