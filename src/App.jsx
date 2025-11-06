@@ -12,6 +12,10 @@ import DashboardApro from "./routes/DashboardApro.jsx";
 import Graficas from "./routes/Graficas.jsx";
 import Reportes from "./routes/Reportes.jsx";
 import DashboardProvider from "./routes/DashboardProvider.jsx";
+import GestionDatosPro from "./routes/GestionDatosPro.jsx";
+import OrdenCompraPro from "./routes/OrdenCompraPro.jsx";
+import DocumentosPro from "./routes/DocumentosPro.jsx";
+import EstatusPago from "./routes/EstatusPago.jsx";
 
 
 
@@ -31,7 +35,10 @@ function App() {
         <Route path="/graficas" element={<Graficas />} />
         <Route path="/reportes" element={<Reportes />} />
         <Route path="/dashboardprovider" element={<DashboardProvider />} />
-
+        <Route path="/gestionproveedor" element={<GestionDatosPro />} />
+        <Route path="/ordenesdecomprapro" element={<OrdenCompraPro />} />
+        <Route path="/documentospro" element={<DocumentosPro />} />
+        <Route path="/estatuspago" element={<EstatusPago />} />
 
     </Routes>
   );

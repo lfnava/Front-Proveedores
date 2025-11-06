@@ -18,6 +18,12 @@ import {
   ArrowRight
 } from "lucide-react";
 
+// Importar los componentes reales
+import GestionDatosPro from "./GestionDatosPro";
+import OrdenCompraPro from "./OrdenCompraPro";
+import DocumentosPro from "./DocumentosPro";
+import EstatusPago from "./EstatusPago";
+
 function DashboardProvider() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -344,64 +350,6 @@ function DashboardProvider() {
     );
   };
 
-  // --- COMPONENTES DE MÓDULOS ---
-  const FormularioGestionDatos = () => (
-    <div className="p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-darkBlue">Gestión de Datos</h2>
-            <p className="text-midBlue">Módulo de gestión de información</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg border border-lightBlue p-12 text-center">
-          <User className="w-16 h-16 text-midBlue mx-auto mb-4" />
-          <p className="text-midBlue text-lg">Módulo de Gestión de Datos</p>
-          <p className="text-darkBlue mt-2">Aquí se gestionará la información del proveedor</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const OrdenesCompra = () => (
-    <div className="p-6">
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-darkBlue mb-6">Órdenes de Compra</h2>
-        <div className="bg-white rounded-lg border border-lightBlue p-8 text-center">
-          <ClipboardList className="w-16 h-16 text-midBlue mx-auto mb-4" />
-          <p className="text-midBlue text-lg">Módulo de Órdenes de Compra</p>
-          <p className="text-darkBlue mt-2">Aquí se mostrarán las órdenes de compra recibidas</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const CargaDocumentos = () => (
-    <div className="p-6">
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-darkBlue mb-6">Carga de Documentos</h2>
-        <div className="bg-white rounded-lg border border-lightBlue p-8 text-center">
-          <Upload className="w-16 h-16 text-midBlue mx-auto mb-4" />
-          <p className="text-midBlue text-lg">Módulo de Carga de Documentos</p>
-          <p className="text-darkBlue mt-2">Aquí podrás subir documentos requeridos</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const GestionPagos = () => (
-    <div className="p-6">
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-darkBlue mb-6">Gestión de Estatus de Pago</h2>
-        <div className="bg-white rounded-lg border border-lightBlue p-8 text-center">
-          <DollarSign className="w-16 h-16 text-midBlue mx-auto mb-4" />
-          <p className="text-midBlue text-lg">Módulo de Gestión de Pagos</p>
-          <p className="text-darkBlue mt-2">Aquí podrás consultar el estatus de tus pagos</p>
-        </div>
-      </div>
-    </div>
-  );
-
   // --- CONTENIDO PRINCIPAL ---
   const DashboardContent = () => (
     <div className="p-6">
@@ -432,10 +380,10 @@ function DashboardProvider() {
 
   // --- SISTEMA DE MODALES ---
   const modalComponents = {
-    "gestion-datos": { component: FormularioGestionDatos, title: "Gestión de Datos" },
-    "ordenes-compra": { component: OrdenesCompra, title: "Órdenes de Compra" },
-    "carga-documentos": { component: CargaDocumentos, title: "Carga de Documentos" },
-    "gestion-pagos": { component: GestionPagos, title: "Gestión de Estatus de Pago" },
+    "gestion-datos": { component: GestionDatosPro, title: "Gestión de Datos" },
+    "ordenes-compra": { component: OrdenCompraPro, title: "Órdenes de Compra" },
+    "carga-documentos": { component: DocumentosPro, title: "Carga de Documentos" },
+    "gestion-pagos": { component: EstatusPago, title: "Gestión de Estatus de Pago" },
   };
 
   const openModal = (sectionId) => {
@@ -457,7 +405,7 @@ function DashboardProvider() {
     const renderModalContent = () => {
       if (modalConfig && modalConfig.component) {
         const ModalComponent = modalConfig.component;
-        return <ModalComponent onClose={onClose} />;
+        return <ModalComponent />;
       }
       
       return (
