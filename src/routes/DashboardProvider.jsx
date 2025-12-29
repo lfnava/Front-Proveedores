@@ -57,39 +57,43 @@ function DashboardProvider() {
   const obtenerEventosDelMes = (mes, año) => {
     const eventos = {};
     const ultimoDia = new Date(año, mes + 1, 0);
-    
-    // Pagos a proveedores - MÁXIMO 3 por mes, distribuidos
     const totalDias = ultimoDia.getDate();
-    const diasPago = [
-      Math.floor(totalDias * 0.2),  // ~20% del mes
-      Math.floor(totalDias * 0.5),  // ~50% del mes
-      Math.floor(totalDias * 0.8)   // ~80% del mes
-    ].filter(dia => dia >= 1 && dia <= totalDias)
-     .slice(0, 3); // Máximo 3 pagos
     
-    diasPago.forEach((dia, index) => {
+    // 1. PAGOS A PROVEEDORES - MÁXIMO 3 por mes, distribuidos (VERDE)
+    const diasPago = [
+      Math.max(1, Math.floor(totalDias * 0.2)),  // ~20% del mes
+      Math.max(1, Math.floor(totalDias * 0.5)),  // ~50% del mes
+      Math.max(1, Math.floor(totalDias * 0.8))   // ~80% del mes
+    ].filter((dia, index, array) => 
+      dia >= 1 && dia <= totalDias && array.indexOf(dia) === index
+    ).slice(0, 3);
+    
+    diasPago.forEach((dia) => {
       const fecha = new Date(año, mes, dia);
       const diaSemana = fecha.getDay();
       // Solo agregar si es día laboral (1-5 = Lunes a Viernes)
       if (diaSemana >= 1 && diaSemana <= 5) {
-        eventos[dia] = [{ tipo: ``, evento: "Pago a proveedores", color: "verde" }];
+        eventos[dia] = [{ tipo: "", evento: "Pago a proveedores", color: "verde" }];
       }
     });
     
-    // Cierre de factura - Si el 15 no es laboral, se mueve al viernes anterior
-    const diaCierre = new Date(año, mes, 15);
-    if (15 <= ultimoDia.getDate()) {
-      let diaCierreAjustado = 15;
-      // Si el 15 es sábado (6) o domingo (0), mover al viernes anterior
-      if (diaCierre.getDay() === 6) { // Sábado
-        diaCierreAjustado = 14;
-      } else if (diaCierre.getDay() === 0) { // Domingo
-        diaCierreAjustado = 13;
-      }
-      // Solo agregar si el día ajustado es laboral
-      const fechaAjustada = new Date(año, mes, diaCierreAjustado);
+    // 2. CIERRE DE FACTURA - 15 de cada mes o el viernes anterior si no es laboral (AMARILLO)
+    let diaCierre = 15;
+    const fechaCierre = new Date(año, mes, 15);
+    const diaSemanaCierre = fechaCierre.getDay();
+    
+    // Ajustar si el 15 no es laboral
+    if (diaSemanaCierre === 6) { // Sábado
+      diaCierre = 14; // Viernes anterior
+    } else if (diaSemanaCierre === 0) { // Domingo
+      diaCierre = 13; // Viernes anterior
+    }
+    
+    // Solo agregar si el día ajustado está dentro del mes y es laboral
+    if (diaCierre <= totalDias) {
+      const fechaAjustada = new Date(año, mes, diaCierre);
       if (fechaAjustada.getDay() >= 1 && fechaAjustada.getDay() <= 5) {
-        eventos[diaCierreAjustado] = [{ 
+        eventos[diaCierre] = [{ 
           tipo: "", 
           evento: "Cierre de factura", 
           color: "amarillo"
@@ -97,19 +101,17 @@ function DashboardProvider() {
       }
     }
     
-    // Fin de recepción - Último LUNES del mes
-    const ultimoDiaDelMes = new Date(año, mes + 1, 0);
+    // 3. FIN DE RECEPCIÓN - Último LUNES del mes (ROJO)
+    // Empezar desde el último día del mes
+    let ultimoLunes = new Date(año, mes + 1, 0);
     
-    // Encontrar el último lunes del mes
-    let ultimoLunes = new Date(ultimoDiaDelMes);
-    
-    // Retroceder hasta encontrar un lunes (día 1)
-    while (ultimoLunes.getDay() !== 1) {
+    // Retroceder hasta encontrar un lunes
+    while (ultimoLunes.getDay() !== 1 && ultimoLunes.getDate() > 1) {
       ultimoLunes.setDate(ultimoLunes.getDate() - 1);
     }
     
-    // Verificar que el lunes encontrado está en el mismo mes
-    if (ultimoLunes.getMonth() === mes) {
+    // Si encontramos un lunes y está en el mismo mes
+    if (ultimoLunes.getDay() === 1 && ultimoLunes.getMonth() === mes) {
       eventos[ultimoLunes.getDate()] = [{ 
         tipo: "", 
         evento: "Fin de recepción", 
@@ -229,11 +231,16 @@ function DashboardProvider() {
       const ultimoDia = new Date(year, month + 1, 0);
       const dias = [];
       
+      // Obtener eventos primero
+      const eventosMes = obtenerEventosDelMes(month, year);
+      
+      // Generar todos los días del mes (solo laborales)
       for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
         const fecha = new Date(year, month, dia);
         const diaSemana = fecha.getDay();
+        
+        // Solo incluir días laborales (Lunes a Viernes)
         if (diaSemana >= 1 && diaSemana <= 5) {
-          const eventosMes = obtenerEventosDelMes(month, year);
           dias.push({
             fecha: dia,
             diaSemana,

@@ -17,6 +17,11 @@ import OrdenCompraPro from "./routes/OrdenCompraPro.jsx";
 import DocumentosPro from "./routes/DocumentosPro.jsx";
 import EstatusPago from "./routes/EstatusPago.jsx";
 
+import HistorialActividad from './routes/HistorialActividad';
+import ActualizacionListaSAT from './routes/ActualizacionListaSAT';
+import ReactivacionProveedores from './routes/ReactivacionProveedores';
+import HistorialPagos from './routes/HistorialPagos';
+
 
 
 function App() {
@@ -39,6 +44,10 @@ function App() {
         <Route path="/ordenesdecomprapro" element={<OrdenCompraPro />} />
         <Route path="/documentospro" element={<DocumentosPro />} />
         <Route path="/estatuspago" element={<EstatusPago />} />
+        <Route path="/historialactividad" element={<HistorialActividad />} />
+        <Route path="/actualizacionsat" element={<ActualizacionListaSAT />} />
+        <Route path="/reactivacionproveedores" element={<ReactivacionProveedores />} />
+        <Route path="/historialpagos" element={<HistorialPagos />} />
 
     </Routes>
   );

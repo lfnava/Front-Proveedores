@@ -17,7 +17,13 @@ import {
   BarChart3,
   AlertCircle,
   CheckCircle2,
-  Info
+  Info,
+  Bell,
+  Check,
+  History,
+  DollarSign,
+  RefreshCw,
+  RotateCcw
 } from "lucide-react";
 
 // Importar tus componentes
@@ -26,17 +32,67 @@ import GestionProveedores from './GestionProveedores';
 import Usuarios from './Usuarios';
 import VerificacionR from './VerificacionR';
 import Graficas from './Graficas'; // Importar el componente de gráficas
+// Importar los nuevos componentes
+import HistorialActividad from './HistorialActividad';
+import HistorialPagos from './HistorialPagos';
+import ActualizacionListaSAT from './ActualizacionListaSAT';
+import ReactivacionProveedores from './ReactivacionProveedores';
 
 function DashboardAdmin() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState("inicio");
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentModal, setCurrentModal] = useState("");
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertConfig, setAlertConfig] = useState({ type: '', title: '', message: '', showConfirm: false, onConfirm: null });
 
-  // MENÚ ORIGINAL - Sin la opción de gráficas en el sidebar
+  // Estado para notificaciones
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: "Nuevo proveedor registrado",
+      message: "La empresa 'Tecnologías Innovadoras S.A.' ha completado su registro",
+      time: "Hace 5 minutos",
+      read: false,
+      type: "info"
+    },
+    {
+      id: 2,
+      title: "Documento pendiente de revisión",
+      message: "El expediente #PROV-2024-045 requiere validación",
+      time: "Hace 2 horas",
+      read: false,
+      type: "warning"
+    },
+    {
+      id: 3,
+      title: "Usuario solicitó acceso",
+      message: "Juan Pérez ha solicitado acceso al sistema",
+      time: "Hace 1 día",
+      read: true,
+      type: "info"
+    },
+    {
+      id: 4,
+      title: "Sistema actualizado",
+      message: "Se ha completado la actualización a la versión 2.1.0",
+      time: "Hace 2 días",
+      read: true,
+      type: "success"
+    },
+    {
+      id: 5,
+      title: "Recordatorio de auditoría",
+      message: "La auditoría trimestral está programada para el 15 de diciembre",
+      time: "Hace 3 días",
+      read: true,
+      type: "warning"
+    }
+  ]);
+
+  // MENÚ ACTUALIZADO con los 4 nuevos elementos
   const menuItems = [
     {
       id: "gestion-proveedores",
@@ -64,9 +120,30 @@ function DashboardAdmin() {
       title: "Verificación Rápida",
       icon: <FileSearch className="w-5 h-5" />,
     },
+    // NUEVOS ELEMENTOS AGREGADOS AQUÍ
+    {
+      id: "historial-actividad",
+      title: "Historial de Actividad",
+      icon: <History className="w-5 h-5" />,
+    },
+    {
+      id: "historial-pagos",
+      title: "Historial de Pagos",
+      icon: <DollarSign className="w-5 h-5" />,
+    },
+    {
+      id: "actualizacion-sat",
+      title: "Actualización SAT",
+      icon: <RefreshCw className="w-5 h-5" />,
+    },
+    {
+      id: "reactivacion-proveedores",
+      title: "Reactivación Proveedores",
+      icon: <RotateCcw className="w-5 h-5" />,
+    },
   ];
 
-  // Mapeo de modales a componentes
+  // MAPEO DE MODALES ACTUALIZADO con los nuevos componentes
   const modalComponents = {
     // Gestión de Proveedores
     "altas": { component: GestionProveedores, title: "Altas de Proveedores", props: { mode: 'alta' } },
@@ -80,7 +157,32 @@ function DashboardAdmin() {
     "administracion": { component: Usuarios, title: "Administración de Usuarios", props: {} },
     
     // Verificación Rápida
-    "verificacion-rapida": { component: VerificacionR, title: "Verificación Rápida", props: {} }
+    "verificacion-rapida": { component: VerificacionR, title: "Verificación Rápida", props: {} },
+    
+    // NUEVOS COMPONENTES AGREGADOS AQUÍ
+    "historial-actividad": { component: HistorialActividad, title: "Historial de Actividad", props: {} },
+    "historial-pagos": { component: HistorialPagos, title: "Historial de Pagos", props: {} },
+    "actualizacion-sat": { component: ActualizacionListaSAT, title: "Actualización Lista SAT", props: {} },
+    "reactivacion-proveedores": { component: ReactivacionProveedores, title: "Reactivación de Proveedores", props: {} }
+  };
+
+  // Contar notificaciones no leídas
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  // Función para marcar notificación como leída
+  const markAsRead = (id) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+    );
+  };
+
+  // Función para marcar todas como leídas
+  const markAllAsRead = () => {
+    setNotifications(prev => 
+      prev.map(notification => ({ ...notification, read: true }))
+    );
   };
 
   // Función para mostrar alertas centradas
@@ -353,6 +455,102 @@ function DashboardAdmin() {
             </h1>
           </div>
           <div className="flex items-center gap-4">
+            {/* Icono de Notificaciones */}
+            <div className="relative">
+              <button
+                onClick={() => setNotificationsOpen(!notificationsOpen)}
+                className="relative p-2 hover:bg-lightBlue rounded-lg transition"
+              >
+                <Bell className="w-6 h-6 text-darkBlue" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Panel de Notificaciones */}
+              {notificationsOpen && (
+                <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-lg shadow-xl border border-lightBlue z-50">
+                  <div className="p-4 border-b border-lightBlue flex justify-between items-center">
+                    <h3 className="font-semibold text-darkBlue">Notificaciones</h3>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={markAllAsRead}
+                        className="text-sm text-midBlue hover:text-darkBlue transition"
+                      >
+                        Marcar todas como leídas
+                      </button>
+                      <button
+                        onClick={() => setNotificationsOpen(false)}
+                        className="p-1 hover:bg-lightBlue rounded"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.length > 0 ? (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-4 border-b border-lightBlue hover:bg-lightBlue transition ${
+                            !notification.read ? 'bg-blue-50' : ''
+                          }`}
+                          onClick={() => markAsRead(notification.id)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-full ${
+                              notification.type === 'success' ? 'bg-green-100 text-green-600' :
+                              notification.type === 'warning' ? 'bg-yellow-100 text-yellow-600' :
+                              'bg-blue-100 text-blue-600'
+                            }`}>
+                              {notification.type === 'success' ? (
+                                <CheckCircle2 className="w-4 h-4" />
+                              ) : (
+                                <AlertCircle className="w-4 h-4" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start">
+                                <h4 className="font-medium text-darkBlue">{notification.title}</h4>
+                                {!notification.read && (
+                                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                              <div className="flex justify-between items-center mt-2">
+                                <span className="text-xs text-gray-500">{notification.time}</span>
+                                {!notification.read && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      markAsRead(notification.id);
+                                    }}
+                                    className="text-xs text-midBlue hover:text-darkBlue transition"
+                                  >
+                                    Marcar como leída
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-8 text-center">
+                        <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500">No hay notificaciones</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                </div>
+              )}
+            </div>
+
+            {/* Menú de Usuario */}
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -402,10 +600,14 @@ function DashboardAdmin() {
         onConfirm={alertConfig.onConfirm}
       />
 
-      {userMenuOpen && (
+      {/* Overlay para cerrar menús al hacer clic fuera */}
+      {(userMenuOpen || notificationsOpen) && (
         <div 
           className="fixed inset-0 z-40"
-          onClick={() => setUserMenuOpen(false)}
+          onClick={() => {
+            setUserMenuOpen(false);
+            setNotificationsOpen(false);
+          }}
         />
       )}
     </div>

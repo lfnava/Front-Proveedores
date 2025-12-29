@@ -75,21 +75,21 @@ function Autentificacion() {
   }, [showAlert]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-beige p-8">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-lightBlue">
+    <div className="min-h-screen flex items-center justify-center bg-beige p-4 sm:p-6 lg:p-8">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-lightBlue mx-auto">
         
         {/* Contenido principal */}
-        <div className="p-12">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-darkBlue mb-4">Verificación de Código</h1>
-            <p className="text-xl text-midBlue">
+        <div className="p-6 sm:p-8 md:p-10 lg:p-12">
+          <div className="text-center mb-8 sm:mb-10 lg:mb-12">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-darkBlue mb-3 sm:mb-4">Verificación de Código</h1>
+            <p className="text-base sm:text-lg lg:text-xl text-midBlue">
               Ingresa el código de 6 dígitos que te enviamos
             </p>
           </div>
 
-          <div className="space-y-12">
+          <div className="space-y-8 sm:space-y-10 lg:space-y-12">
             {/* Inputs del código - MARCOS SUTILES */}
-            <div className="flex justify-center gap-6">
+            <div className="flex justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6">
               {code.map((digit, index) => (
                 <input
                   key={index}
@@ -102,7 +102,7 @@ function Autentificacion() {
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onPaste={handlePaste}
                   disabled={isLoading}
-                  className="w-20 h-20 text-center text-3xl font-bold border-2 border-gray-400 rounded-xl focus:outline-none focus:border-midBlue focus:ring-2 focus:ring-midBlue focus:ring-opacity-30 transition-all bg-white"
+                  className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 text-center text-xl sm:text-2xl lg:text-3xl font-bold border-2 border-gray-400 rounded-lg sm:rounded-xl focus:outline-none focus:border-midBlue focus:ring-2 focus:ring-midBlue focus:ring-opacity-30 transition-all bg-white"
                 />
               ))}
             </div>
@@ -110,19 +110,19 @@ function Autentificacion() {
             {/* Estado de carga */}
             {isLoading && (
               <div className="text-center">
-                <div className="inline-flex items-center gap-4 text-midBlue text-lg">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-midBlue"></div>
+                <div className="inline-flex items-center gap-3 sm:gap-4 text-midBlue text-base sm:text-lg">
+                  <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-midBlue"></div>
                   <span>Verificando código...</span>
                 </div>
               </div>
             )}
 
             {/* Botón reenviar */}
-            <div className="text-center pt-8 border-t border-lightBlue">
+            <div className="text-center pt-6 sm:pt-8 border-t border-lightBlue">
               <button 
                 onClick={handleResendCode}
                 disabled={isLoading}
-                className="text-midBlue hover:text-darkBlue font-semibold text-lg transition-colors disabled:opacity-50 px-6 py-3 rounded-lg hover:bg-lightBlue hover:bg-opacity-30"
+                className="text-midBlue hover:text-darkBlue font-semibold text-base sm:text-lg transition-colors disabled:opacity-50 px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-lightBlue hover:bg-opacity-30 w-full sm:w-auto"
               >
                 Reenviar código de verificación
               </button>
@@ -133,26 +133,25 @@ function Autentificacion() {
 
       {/* Modal de alerta centrado */}
       {showAlert && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 sm:p-6 backdrop-blur-sm">
           <div 
-            className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-lightBlue animate-scale-in"
+            className="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md border border-lightBlue animate-scale-in mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
              
-              
               {/* Texto */}
-              <h3 className="text-2xl font-bold text-darkBlue mb-4">
+              <h3 className="text-xl sm:text-2xl font-bold text-darkBlue mb-3 sm:mb-4">
                 Código Enviado
               </h3>
-              <p className="text-midBlue text-lg mb-8">
+              <p className="text-midBlue text-base sm:text-lg mb-6 sm:mb-8">
                 Se ha enviado un nuevo código de verificación a tu correo electrónico.
               </p>
               
               {/* Botón */}
               <button 
                 onClick={() => setShowAlert(false)}
-                className="w-full py-4 bg-midBlue text-white rounded-xl font-semibold text-lg hover:bg-darkBlue transition-colors"
+                className="w-full py-3 sm:py-4 bg-midBlue text-white rounded-xl font-semibold text-base sm:text-lg hover:bg-darkBlue transition-colors"
               >
                 Aceptar
               </button>
