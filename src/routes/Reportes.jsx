@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx'; // Importar la librería para Excel
+import { Download } from 'lucide-react'; // Icono para el botón
 
 function Reportes({ tipoReporte }) {
   const [datosReportes, setDatosReportes] = useState([]);
@@ -116,6 +118,72 @@ function Reportes({ tipoReporte }) {
     }).format(monto);
   };
 
+  // Función para exportar a Excel
+  const exportarAExcel = () => {
+    // Crear datos formateados para Excel
+    const datosExcel = datosReportes.map(proveedor => {
+      const porcentaje = calcularPorcentajeSatisfaccion(
+        proveedor.aprobadas, 
+        proveedor.rechazadas
+      );
+      
+      return {
+        'Proveedor': proveedor.proveedor,
+        'Aprobadas': proveedor.aprobadas,
+        'Rechazadas': proveedor.rechazadas,
+        'Monto Aprobado': formatearMoneda(proveedor.montoAprobado),
+        'Monto Rechazado': formatearMoneda(proveedor.montoRechazado),
+        'Porcentaje de Satisfacción': `${porcentaje}%`
+      };
+    });
+
+    // Agregar fila de resumen
+    const totalAprobadas = datosReportes.reduce((sum, p) => sum + p.aprobadas, 0);
+    const totalRechazadas = datosReportes.reduce((sum, p) => sum + p.rechazadas, 0);
+    const totalMontoAprobado = datosReportes.reduce((sum, p) => sum + p.montoAprobado, 0);
+    const totalMontoRechazado = datosReportes.reduce((sum, p) => sum + p.montoRechazado, 0);
+    const promedioPorcentaje = (
+      datosReportes.reduce((sum, p) => 
+        sum + parseFloat(calcularPorcentajeSatisfaccion(p.aprobadas, p.rechazadas)), 0
+      ) / datosReportes.length
+    ).toFixed(1);
+
+    datosExcel.push({}); // Fila vacía para separación
+    datosExcel.push({
+      'Proveedor': 'TOTALES',
+      'Aprobadas': totalAprobadas,
+      'Rechazadas': totalRechazadas,
+      'Monto Aprobado': formatearMoneda(totalMontoAprobado),
+      'Monto Rechazado': formatearMoneda(totalMontoRechazado),
+      'Porcentaje de Satisfacción': `${promedioPorcentaje}%`
+    });
+
+    // Crear hoja de trabajo
+    const ws = XLSX.utils.json_to_sheet(datosExcel, { skipHeader: false });
+    
+    // Ajustar anchos de columnas
+    const wscols = [
+      { wch: 30 }, // Proveedor
+      { wch: 15 }, // Aprobadas
+      { wch: 15 }, // Rechazadas
+      { wch: 20 }, // Monto Aprobado
+      { wch: 20 }, // Monto Rechazado
+      { wch: 25 }  // Porcentaje de Satisfacción
+    ];
+    ws['!cols'] = wscols;
+
+    // Crear libro de trabajo
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+
+    // Generar nombre del archivo
+    const fecha = new Date().toISOString().split('T')[0];
+    const nombreArchivo = `${tipoReporte === 'ordenes-compra' ? 'Reporte_Ordenes_Compra' : 'Reporte_Facturas'}_${fecha}.xlsx`;
+
+    // Descargar archivo
+    XLSX.writeFile(wb, nombreArchivo);
+  };
+
   if (cargando) {
     return (
       <div className="min-h-screen bg-beige flex items-center justify-center">
@@ -140,6 +208,17 @@ function Reportes({ tipoReporte }) {
             : 'Seguimiento de facturas aprobadas y rechazadas'
           }
         </p>
+      </div>
+
+      {/* Botón de descarga Excel */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={exportarAExcel}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+        >
+          <Download className="w-4 h-4" />
+          Descargar Excel
+        </button>
       </div>
 
       {/* Tabla Simplificada */}
@@ -182,7 +261,7 @@ function Reportes({ tipoReporte }) {
                     <td className="p-3 text-center">
                       <span className="text-green-600 font-semibold">
                         {proveedor.aprobadas}
-                      </span>
+                    </span>
                     </td>
                     
                     {/* Rechazadas */}
@@ -271,6 +350,9 @@ function Reportes({ tipoReporte }) {
             ? `Total de órdenes procesadas: ${datosReportes.reduce((sum, p) => sum + p.aprobadas + p.rechazadas, 0)}`
             : `Total de facturas procesadas: ${datosReportes.reduce((sum, p) => sum + p.aprobadas + p.rechazadas, 0)}`
           }
+        </p>
+        <p className="mt-1 text-xs text-gray-500">
+          Puedes descargar este reporte en formato Excel haciendo clic en el botón "Descargar Excel"
         </p>
       </div>
     </div>

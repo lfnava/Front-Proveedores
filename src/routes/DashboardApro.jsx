@@ -23,6 +23,7 @@ import {
 import Aprobacion from './Aprobacion';
 import Graficas from './Graficas';
 import Reportes from "./Reportes";
+import AprobaciondePagos from "./AprobaciondePagos";
 
 function DashboardApro() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -138,13 +139,14 @@ function DashboardApro() {
       icon: <ClipboardList className="w-5 h-5" />,
     },
     {
+      id: "aprobacion-pagos",
+      title: "Aprobación de Pagos",
+      icon: <FileCheck className="w-5 h-5" />,
+    },
+    {
       id: "reportes",
       title: "Reportes",
       icon: <BarChart className="w-5 h-5" />,
-      submenu: [
-        { id: "facturas", title: "Facturas", icon: <FileCheck className="w-4 h-4" /> },
-        { id: "ordenes-compra", title: "Órdenes de Compra", icon: <FileX className="w-4 h-4" /> },
-      ],
     },
   ];
 
@@ -324,16 +326,18 @@ function DashboardApro() {
       } 
     },
     
-    // Reportes - ACTUALIZADO
-    "facturas": { 
-      component: Reportes, 
-      title: "Reporte de Facturas", 
-      props: { tipoReporte: "facturas" } 
+    // Aprobación de Pagos - NUEVO
+    "aprobacion-pagos": { 
+      component: AprobaciondePagos, 
+      title: "Aprobación de Pagos", 
+      props: {} 
     },
-    "ordenes-compra": { 
+    
+    // Reportes
+    "reportes": { 
       component: Reportes, 
-      title: "Reporte de Órdenes de Compra", 
-      props: { tipoReporte: "ordenes-compra" } 
+      title: "Reportes Generales", 
+      props: {} 
     },
     
     // Datos del Aprobador
@@ -568,23 +572,15 @@ function DashboardApro() {
           {menuItems.map((item) => (
             <div key={item.id}>
               <button
-                onClick={() => {
-                  if (item.submenu) {
-                    openModal(item.submenu[0].id);
-                  } else {
-                    openModal(item.id);
-                  }
-                }}
+                onClick={() => openModal(item.id)}
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
-                  currentModal === item.id ||
-                  item.submenu?.some((s) => s.id === currentModal)
+                  currentModal === item.id
                     ? "bg-lightBlue text-darkBlue border border-midBlue"
                     : "text-darkBlue hover:bg-lightBlue"
                 }`}
               >
                 <div className={`p-1.5 rounded-lg ${
-                  currentModal === item.id ||
-                  item.submenu?.some((s) => s.id === currentModal)
+                  currentModal === item.id
                     ? "bg-midBlue text-white"
                     : "bg-lightBlue text-darkBlue"
                 }`}>
@@ -592,26 +588,6 @@ function DashboardApro() {
                 </div>
                 {sidebarOpen && <span className="text-sm font-medium">{item.title}</span>}
               </button>
-
-              {/* SUBMENÚ */}
-              {sidebarOpen && item.submenu && (
-                <div className="ml-4 mt-2 space-y-1 border-l border-lightBlue pl-4">
-                  {item.submenu.map((sub) => (
-                    <button
-                      key={sub.id}
-                      onClick={() => openModal(sub.id)}
-                      className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm transition-colors ${
-                        currentModal === sub.id
-                          ? "text-midBlue font-medium"
-                          : "text-darkBlue hover:text-midBlue"
-                      }`}
-                    >
-                      {sub.icon}
-                      {sub.title}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           ))}
         </nav>

@@ -23,7 +23,8 @@ import {
   History,
   DollarSign,
   RefreshCw,
-  RotateCcw
+  RotateCcw,
+  CreditCard // Nuevo ícono para gestión de pagos
 } from "lucide-react";
 
 // Importar tus componentes
@@ -31,12 +32,13 @@ import ExpedientesDigitales from './ExpedientesDigitales';
 import GestionProveedores from './GestionProveedores';
 import Usuarios from './Usuarios';
 import VerificacionR from './VerificacionR';
-import Graficas from './Graficas'; // Importar el componente de gráficas
+import Graficas from './Graficas';
 // Importar los nuevos componentes
 import HistorialActividad from './HistorialActividad';
 import HistorialPagos from './HistorialPagos';
 import ActualizacionListaSAT from './ActualizacionListaSAT';
 import ReactivacionProveedores from './ReactivacionProveedores';
+import GestionPagos from './GestionPagos'; // Importar el componente de gestión de pagos
 
 function DashboardAdmin() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -92,7 +94,7 @@ function DashboardAdmin() {
     }
   ]);
 
-  // MENÚ ACTUALIZADO con los 4 nuevos elementos
+  // MENÚ ACTUALIZADO con "Gestión de Pagos" agregado arriba de "Historial de Actividad"
   const menuItems = [
     {
       id: "gestion-proveedores",
@@ -120,7 +122,13 @@ function DashboardAdmin() {
       title: "Verificación Rápida",
       icon: <FileSearch className="w-5 h-5" />,
     },
-    // NUEVOS ELEMENTOS AGREGADOS AQUÍ
+    // NUEVO ELEMENTO AGREGADO: Gestión de Pagos
+    {
+      id: "gestion-pagos",
+      title: "Gestión de Pagos",
+      icon: <CreditCard className="w-5 h-5" />,
+    },
+    // Elementos existentes
     {
       id: "historial-actividad",
       title: "Historial de Actividad",
@@ -143,7 +151,7 @@ function DashboardAdmin() {
     },
   ];
 
-  // MAPEO DE MODALES ACTUALIZADO con los nuevos componentes
+  // MAPEO DE MODALES ACTUALIZADO con "Gestión de Pagos"
   const modalComponents = {
     // Gestión de Proveedores
     "altas": { component: GestionProveedores, title: "Altas de Proveedores", props: { mode: 'alta' } },
@@ -159,7 +167,10 @@ function DashboardAdmin() {
     // Verificación Rápida
     "verificacion-rapida": { component: VerificacionR, title: "Verificación Rápida", props: {} },
     
-    // NUEVOS COMPONENTES AGREGADOS AQUÍ
+    // NUEVO COMPONENTE: Gestión de Pagos
+    "gestion-pagos": { component: GestionPagos, title: "Gestión de Pagos", props: {} },
+    
+    // Componentes existentes
     "historial-actividad": { component: HistorialActividad, title: "Historial de Actividad", props: {} },
     "historial-pagos": { component: HistorialPagos, title: "Historial de Pagos", props: {} },
     "actualizacion-sat": { component: ActualizacionListaSAT, title: "Actualización Lista SAT", props: {} },
