@@ -23,6 +23,7 @@ import ReactivacionProveedores from './routes/ReactivacionProveedores';
 import HistorialPagos from './routes/HistorialPagos';
 import GestionPagos from "./routes/GestionPagos.jsx";
 import AprobaciondePagos from "./routes/AprobaciondePagos.jsx";
+import ExpedientesDigitalesPro from "./routes/ExpedientesDigitalesPro.jsx";
 
 
 
@@ -53,6 +54,7 @@ function App() {
         <Route path="/historialpagos" element={<HistorialPagos />} />
         <Route path="/gestionpagos" element={<GestionPagos />} />
         <Route path="/apropagos" element={<AprobaciondePagos />} />
+        <Route path="/expedientespro" element={<ExpedientesDigitalesPro />} />
 
     </Routes>
   );

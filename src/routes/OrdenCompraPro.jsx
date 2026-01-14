@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, FileText, X, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Upload, FileText, X, CheckCircle, XCircle, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const OrdenCompraPro = () => {
@@ -10,12 +10,12 @@ const OrdenCompraPro = () => {
     numeroOrden: '',
     rfc: '',
     observaciones: '',
-    archivoOrden: null
+    ordenesFacturas: [] // Nuevo: array para múltiples documentos de órdenes y facturas
   });
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
-  const [archivoSubido, setArchivoSubido] = useState(null);
+  const [documentosSubidos, setDocumentosSubidos] = useState([]);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertConfig, setAlertConfig] = useState({ 
     type: '', 
@@ -61,8 +61,9 @@ const OrdenCompraPro = () => {
       return null;
     },
     
-    archivoOrden: (value) => {
-      if (!value) return 'La orden de compra en PDF es obligatoria';
+    // Validación para órdenes y facturas
+    ordenesFacturas: (value) => {
+      if (!value || value.length === 0) return 'Debe subir al menos una orden de compra o factura (PDF o XML)';
       return null;
     }
   };
@@ -124,9 +125,9 @@ const OrdenCompraPro = () => {
                           numeroOrden: '',
                           rfc: '',
                           observaciones: '',
-                          archivoOrden: null
+                          ordenesFacturas: []
                         });
-                        setArchivoSubido(null);
+                        setDocumentosSubidos([]);
                         setTouched({});
                       }
                     }}
@@ -146,9 +147,9 @@ const OrdenCompraPro = () => {
                         numeroOrden: '',
                         rfc: '',
                         observaciones: '',
-                        archivoOrden: null
+                        ordenesFacturas: []
                       });
-                      setArchivoSubido(null);
+                      setDocumentosSubidos([]);
                       setTouched({});
                     }
                   }}
@@ -193,64 +194,104 @@ const OrdenCompraPro = () => {
     }));
   };
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
+  // Función para agregar órdenes y facturas
+  const handleOrdenesFacturas = (event) => {
+    const files = Array.from(event.target.files);
     
-    if (file) {
-      // Validar que sea PDF
-      if (file.type !== 'application/pdf') {
-        setErrors(prev => ({
-          ...prev,
-          archivoOrden: 'Solo se permiten archivos PDF'
-        }));
-        setArchivoSubido(null);
-        setFormData(prev => ({ ...prev, archivoOrden: null }));
-        return;
-      }
-
-      // Validar tamaño (máximo 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setErrors(prev => ({
-          ...prev,
-          archivoOrden: 'El archivo no puede ser mayor a 10MB'
-        }));
-        setArchivoSubido(null);
-        setFormData(prev => ({ ...prev, archivoOrden: null }));
-        return;
-      }
-
-      // Archivo válido
-      setErrors(prev => ({
-        ...prev,
-        archivoOrden: null
-      }));
+    if (files.length > 0) {
+      const nuevosDocumentos = [];
+      const nuevosErrores = [];
       
-      setArchivoSubido({
-        nombre: file.name,
-        tamaño: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-        tipo: file.type
+      files.forEach((file, index) => {
+        let isValidType = false;
+        let errorMessage = '';
+        
+        // Validar tipo de archivo (PDF o XML)
+        const isPDF = file.type === 'application/pdf';
+        const isXML = file.type === 'text/xml' || 
+                     file.type === 'application/xml' || 
+                     file.name.toLowerCase().endsWith('.xml');
+        
+        if (isPDF || isXML) {
+          isValidType = true;
+        } else {
+          errorMessage = `El archivo "${file.name}" no es PDF ni XML`;
+        }
+
+        // Validar tamaño (máximo 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          errorMessage = `El archivo "${file.name}" excede 10MB`;
+          isValidType = false;
+        }
+
+        if (isValidType) {
+          nuevosDocumentos.push({
+            id: Date.now() + index,
+            file: file,
+            info: {
+              nombre: file.name,
+              tamaño: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+              tipo: isPDF ? 'PDF' : 'XML',
+              icono: isPDF ? '📄' : '📋'
+            }
+          });
+        } else {
+          nuevosErrores.push(errorMessage);
+        }
       });
-      
-      setFormData(prev => ({
-        ...prev,
-        archivoOrden: file
-      }));
+
+      // Actualizar documentos subidos
+      if (nuevosDocumentos.length > 0) {
+        setDocumentosSubidos(prev => [...prev, ...nuevosDocumentos]);
+        
+        // Actualizar formData
+        setFormData(prev => ({
+          ...prev,
+          ordenesFacturas: [...prev.ordenesFacturas, ...nuevosDocumentos.map(d => d.file)]
+        }));
+
+        // Limpiar error si hay documentos válidos
+        setErrors(prev => ({
+          ...prev,
+          ordenesFacturas: null
+        }));
+      }
+
+      // Mostrar errores si los hay
+      if (nuevosErrores.length > 0) {
+        showAlert(
+          'error',
+          'Archivos rechazados',
+          `Los siguientes archivos no fueron aceptados:\n${nuevosErrores.join('\n')}`
+        );
+      }
 
       // Marcar como tocado
       setTouched(prev => ({
         ...prev,
-        archivoOrden: true
+        ordenesFacturas: true
       }));
     }
   };
 
-  const handleRemoveFile = () => {
-    setArchivoSubido(null);
-    setFormData(prev => ({ ...prev, archivoOrden: null }));
-    setErrors(prev => ({
+  // Función para eliminar un documento
+  const handleRemoveDocumento = (id) => {
+    const nuevosDocumentos = documentosSubidos.filter(doc => doc.id !== id);
+    setDocumentosSubidos(nuevosDocumentos);
+    
+    // Actualizar formData
+    setFormData(prev => ({
       ...prev,
-      archivoOrden: 'La orden de compra en PDF es obligatoria'
+      ordenesFacturas: nuevosDocumentos.map(doc => doc.file)
     }));
+
+    // Validar si quedan documentos
+    if (nuevosDocumentos.length === 0) {
+      setErrors(prev => ({
+        ...prev,
+        ordenesFacturas: 'Debe subir al menos una orden de compra o factura (PDF o XML)'
+      }));
+    }
   };
 
   const handleSubmit = (e) => {
@@ -275,11 +316,19 @@ const OrdenCompraPro = () => {
     // Si no hay errores, proceder con el envío
     if (Object.keys(newErrors).length === 0) {
       console.log('Datos válidos:', formData);
+      console.log('Órdenes y facturas:', documentosSubidos);
+      
       // Aquí iría la lógica para enviar los datos
+      const countPDF = documentosSubidos.filter(d => d.info.tipo === 'PDF').length;
+      const countXML = documentosSubidos.filter(d => d.info.tipo === 'XML').length;
+      
       showAlert(
         'success', 
-        'Orden Registrada', 
-        'La orden de compra se ha registrado correctamente.'
+        'Registro Completado', 
+        `Se han registrado ${documentosSubidos.length} documento(s):\n` +
+        `• ${countPDF} PDF(s)\n` +
+        `• ${countXML} XML(s)\n\n` +
+        `La información ha sido guardada correctamente.`
       );
     } else {
       // Mostrar alerta de error si hay campos inválidos
@@ -318,8 +367,8 @@ const OrdenCompraPro = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-darkBlue">Registro de Órdenes de Compra</h2>
-              <p className="text-midBlue">Registra tus órdenes de compra</p>
+              <h2 className="text-2xl font-bold text-darkBlue">Registro de Órdenes de Compra y Facturas</h2>
+              <p className="text-midBlue">Registra tus órdenes de compra y Facturas</p>
             </div>
           </div>
         </div>
@@ -466,7 +515,7 @@ const OrdenCompraPro = () => {
                           ? 'border-green-500 focus:ring-green-500'
                           : 'border-lightBlue focus:ring-midBlue'
                       }`}
-                      placeholder="Observaciones adicionales (opcional)"
+                      placeholder="Agregar Informacion de la Orden de Compra y Factura"
                     />
                     <div className="absolute right-3 top-2">
                       {renderFieldIcon('observaciones')}
@@ -480,71 +529,109 @@ const OrdenCompraPro = () => {
                   </div>
                 </div>
 
-                {/* Subir Orden de Compra PDF */}
+                {/* NUEVO: Ordenes de Compra y Facturas (múltiples) */}
                 <div>
                   <label className="block text-sm font-medium text-darkBlue mb-1">
-                    Orden de Compra en PDF *
+                    Ordenes de Compra y Facturas (PDF y/o XML) *
                   </label>
                   <div className={`border-2 border-dashed rounded-lg p-4 text-center transition ${
-                    errors.archivoOrden 
+                    errors.ordenesFacturas && documentosSubidos.length === 0
                       ? 'border-red-500 bg-red-50' 
-                      : archivoSubido
+                      : documentosSubidos.length > 0
                       ? 'border-green-500 bg-green-50'
                       : 'border-lightBlue hover:border-midBlue'
                   }`}>
-                    {!archivoSubido ? (
-                      <div>
-                        <Upload className="w-8 h-8 text-midBlue mx-auto mb-2" />
-                        <p className="text-sm text-darkBlue mb-2">
-                          Haz clic para subir la orden de compra en PDF
-                        </p>
-                        <p className="text-xs text-midBlue">
-                          Máximo 10MB - Solo archivos PDF
-                        </p>
-                        <input
-                          type="file"
-                          className="hidden"
-                          id="orden-pdf"
-                          accept=".pdf"
-                          onChange={handleFileUpload}
-                        />
-                        <label
-                          htmlFor="orden-pdf"
-                          className="inline-block mt-2 px-4 py-2 bg-midBlue text-white rounded-lg hover:bg-darkBlue transition cursor-pointer text-sm"
-                        >
-                          Seleccionar Archivo
-                        </label>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                        <p className="text-sm font-medium text-darkBlue">{archivoSubido.nombre}</p>
-                        <p className="text-xs text-midBlue">{archivoSubido.tamaño}</p>
-                        <button
-                          type="button"
-                          onClick={handleRemoveFile}
-                          className="mt-2 px-3 py-1 text-red-500 hover:text-red-700 transition text-sm flex items-center gap-1 mx-auto"
-                        >
-                          <X className="w-4 h-4" />
-                          Remover archivo
-                        </button>
+                    <div className="mb-4">
+                      <Upload className="w-8 h-8 text-midBlue mx-auto mb-2" />
+                      <p className="text-sm text-darkBlue mb-2">
+                        Sube órdenes de compra y/o facturas
+                      </p>
+                      <p className="text-xs text-midBlue">
+                        Máximo 10MB por archivo - Mínimo 1 documento
+                      </p>
+                      <input
+                        type="file"
+                        className="hidden"
+                        id="ordenes-facturas"
+                        accept=".pdf,.xml"
+                        multiple
+                        onChange={handleOrdenesFacturas}
+                      />
+                      <label
+                        htmlFor="ordenes-facturas"
+                        className="inline-block mt-2 px-4 py-2 bg-midBlue text-white rounded-lg hover:bg-darkBlue transition cursor-pointer text-sm"
+                      >
+                        <Plus className="w-4 h-4 inline mr-1" />
+                        Agregar Documentos
+                      </label>
+                    </div>
+
+                    {/* Lista de documentos subidos */}
+                    {documentosSubidos.length > 0 && (
+                      <div className="mt-4 border-t pt-4">
+                        <h4 className="text-sm font-medium text-darkBlue mb-2">
+                          Documentos subidos ({documentosSubidos.length})
+                        </h4>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {documentosSubidos.map((doc) => (
+                            <div 
+                              key={doc.id} 
+                              className="flex items-center justify-between bg-gray-50 p-2 rounded hover:bg-gray-100 transition"
+                            >
+                              <div className="flex items-center flex-1 min-w-0">
+                                <span className="mr-2 text-lg">{doc.info.icono}</span>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-medium text-darkBlue truncate" title={doc.info.nombre}>
+                                    {doc.info.nombre}
+                                  </p>
+                                  <div className="flex items-center text-xs text-midBlue">
+                                    <span>{doc.info.tamaño}</span>
+                                    <span className="mx-1">•</span>
+                                    <span className={`px-1.5 py-0.5 rounded text-xs ${doc.info.tipo === 'PDF' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
+                                      {doc.info.tipo}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveDocumento(doc.id)}
+                                className="ml-2 text-red-500 hover:text-red-700 transition flex-shrink-0"
+                                title="Eliminar documento"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
-                  {errors.archivoOrden && (
-                    <p className="text-red-500 text-xs mt-1">{errors.archivoOrden}</p>
+                  {errors.ordenesFacturas && (
+                    <p className="text-red-500 text-xs mt-1">{errors.ordenesFacturas}</p>
                   )}
+                  <div className="flex justify-between items-center mt-1">
+                    <div className="text-xs text-midBlue">
+                      {documentosSubidos.length} documento(s) subido(s)
+                    </div>
+                    {documentosSubidos.length > 0 && (
+                      <div className="text-xs text-midBlue">
+                        {documentosSubidos.filter(d => d.info.tipo === 'PDF').length} PDF •{' '}
+                        {documentosSubidos.filter(d => d.info.tipo === 'XML').length} XML
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Botones de acción - SOLO REGISTRAR ORDEN DE COMPRA */}
+            {/* Botones de acción */}
             <div className="flex justify-end space-x-3 pt-6 mt-6 border-t border-lightBlue">
               <button 
                 type="submit"
                 className="px-6 py-2 bg-midBlue text-white rounded-lg hover:bg-darkBlue transition"
               >
-                Registrar Orden de Compra
+                Registrar Orden de Compra y Facturas
               </button>
             </div>
           </div>

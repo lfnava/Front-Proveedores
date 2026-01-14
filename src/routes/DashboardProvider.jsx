@@ -15,7 +15,8 @@ import {
   DollarSign,
   Calendar,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  FolderOpen // Nuevo icono para Expedientes digitales
 } from "lucide-react";
 
 // Importar los componentes reales
@@ -23,6 +24,8 @@ import GestionDatosPro from "./GestionDatosPro";
 import OrdenCompraPro from "./OrdenCompraPro";
 import DocumentosPro from "./DocumentosPro";
 import EstatusPago from "./EstatusPago";
+import ExpedientesDigitalesPro from "./ExpedientesDigitalesPro"; // Importar el nuevo componente
+
 
 function DashboardProvider() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -35,7 +38,7 @@ function DashboardProvider() {
 
   // DATOS DEL PROVEEDOR
   const [datosProveedor] = useState({
-    nombreEmpresa: "Tecnología S.A. de C.V.",
+    nombreEmpresa: "",
   });
 
   // DATOS PARA LAS GRÁFICAS
@@ -45,12 +48,13 @@ function DashboardProvider() {
     ordenesCompra: { retrasadas: 8, cerradas: 80, "volumen activo": 12 },
   });
 
-  // MENÚ PARA PROVEEDOR
+  // MENÚ PARA PROVEEDOR - Agregar nuevo item "Expedientes digitales"
   const menuItems = [
     { id: "gestion-datos", title: "Gestión de Datos", icon: <User className="w-5 h-5" /> },
-    { id: "ordenes-compra", title: "Órdenes de Compra", icon: <ClipboardList className="w-5 h-5" /> },
+    { id: "ordenes-compra", title: "Órdenes de Compra y Facturas", icon: <ClipboardList className="w-5 h-5" /> },
     { id: "carga-documentos", title: "Carga de Documentos", icon: <Upload className="w-5 h-5" /> },
     { id: "gestion-pagos", title: "Gestión de Estatus de Pago", icon: <DollarSign className="w-5 h-5" /> },
+    { id: "expedientes-digitales", title: "Expedientes digitales", icon: <FolderOpen className="w-5 h-5" /> }, // Nuevo item
   ];
 
   // --- FUNCIONES DEL CALENDARIO ---
@@ -388,9 +392,10 @@ function DashboardProvider() {
   // --- SISTEMA DE MODALES ---
   const modalComponents = {
     "gestion-datos": { component: GestionDatosPro, title: "Gestión de Datos" },
-    "ordenes-compra": { component: OrdenCompraPro, title: "Órdenes de Compra" },
+    "ordenes-compra": { component: OrdenCompraPro, title: "Órdenes de Compra y Facturas" },
     "carga-documentos": { component: DocumentosPro, title: "Carga de Documentos" },
     "gestion-pagos": { component: EstatusPago, title: "Gestión de Estatus de Pago" },
+    "expedientes-digitales": { component: ExpedientesDigitalesPro, title: "Expedientes digitales" }, // Nuevo componente modal
   };
 
   const openModal = (sectionId) => {

@@ -23,7 +23,7 @@ const DocumentosPro = () => {
         id: 'opinion-sat-fisica', 
         nombre: 'Opinión de Cumplimiento SAT/Constancia Fiscal', 
         requerido: true,
-        descripcion: 'Documento emitido por el SAT que acredita el cumplimiento de obligaciones fiscales'
+        descripcion: 'Documento emitido por el SAT que acredita el cumplimiento de obligaciones fiscales, NO MAYOR A 3 MESES'
       },
       { 
         id: 'identificacion-fisica', 
@@ -41,7 +41,7 @@ const DocumentosPro = () => {
         id: 'contratos-fisica', 
         nombre: 'Contratos', 
         requerido: true,
-        descripcion: 'Contratos de servicios o productos establecidos'
+        descripcion: 'Contratos de servicios o productos establecidos, EL DOCUMENTO DEBERA DE ESTAR FIRMADO'
       }
     ],
     moral: [
@@ -49,13 +49,13 @@ const DocumentosPro = () => {
         id: 'opinion-sat-moral', 
         nombre: 'Opinión de Cumplimiento SAT/Constancia Fiscal', 
         requerido: true,
-        descripcion: 'Documento emitido por el SAT que acredita el cumplimiento de obligaciones fiscales de la empresa'
+        descripcion: 'Documento emitido por el SAT que acredita el cumplimiento de obligaciones fiscales de la empresa NO MAYOR A TRES MESES'
       },
       { 
         id: 'contratos-moral', 
         nombre: 'Contratos', 
         requerido: true,
-        descripcion: 'Contratos de servicios o productos establecidos'
+        descripcion: 'Contratos de servicios o productos establecidos EL DOCUMENTO DEBERA DE ESTAR FIRMADO'
       }
     ]
   };
